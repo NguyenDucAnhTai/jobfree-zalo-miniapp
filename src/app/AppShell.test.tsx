@@ -27,8 +27,8 @@ describe('AppShell role context', () => {
     render(<AppShell />)
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
-    expect(screen.getByRole('heading', { name: 'Công việc' })).toBeInTheDocument()
-    expect(screen.getByText(/được lên kế hoạch cho round sau/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Lịch sử yêu cầu' })).toBeInTheDocument()
+    expect(screen.getByText(/JF-DEMO-0101/)).toBeInTheDocument()
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
     expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()

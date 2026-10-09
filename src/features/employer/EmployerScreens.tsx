@@ -52,12 +52,14 @@ const demoDate = '2026-10-09'
 export function EmployerRequestDraftScreen({
   draft,
   saved,
+  backDestination,
   onChange,
   onSave,
   onNavigate,
 }: {
   draft: EmployerRequestDraft
   saved: boolean
+  backDestination?: Destination
   onChange: (draft: EmployerRequestDraft) => void
   onSave: () => void
   onNavigate: (destination: Destination) => void
@@ -75,7 +77,9 @@ export function EmployerRequestDraftScreen({
 
   return (
     <main className="employer-page-content request-draft-page">
-      <button className="back-link" type="button" onClick={() => onNavigate(service ? 'services' : 'home')}>← Quay lại</button>
+      <button className="back-link" type="button" onClick={() => onNavigate(backDestination ?? (service ? 'services' : 'home'))}>
+        {backDestination === 'requestSummary' ? '← Tóm tắt yêu cầu' : '← Quay lại'}
+      </button>
       <PageHeading eyebrow="BẢN NHÁP DEMO" title="Tạo yêu cầu" detail="Thông tin chỉ lưu trong trạng thái demo của phiên này." />
       {saved && <div className="draft-saved-banner" role="status"><span aria-hidden="true">✓</span> Đã lưu bản nháp trên thiết bị này (demo)</div>}
       <form className="draft-form" onSubmit={save} noValidate>

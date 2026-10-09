@@ -34,7 +34,7 @@ describe('Employer core demo flows', () => {
     expect(validateEmployerDraft({ ...emptyEmployerRequestDraft, serviceId: 'moving', details: 'Mô tả công việc hợp lệ', location: 'Quận 1, TP.HCM', startTime: '12:00', endTime: '08:00' })).toHaveProperty('time')
   })
 
-  it('saves a draft locally and keeps it isolated while switching roles', () => {
+  it('routes the saved draft to its summary and keeps it isolated while switching roles', () => {
     render(<AppShell />)
     fireEvent.click(screen.getByRole('button', { name: 'Tạo yêu cầu' }))
     fireEvent.change(screen.getByLabelText('Dịch vụ'), { target: { value: 'moving' } })
@@ -42,7 +42,9 @@ describe('Employer core demo flows', () => {
     fireEvent.change(screen.getByLabelText('Địa điểm làm việc (dữ liệu demo)'), { target: { value: 'Quận 1, TP. Hồ Chí Minh' } })
     fireEvent.click(screen.getByRole('button', { name: /lưu bản nháp demo/i }))
 
-    expect(screen.getByRole('status')).toHaveTextContent(/đã lưu bản nháp/i)
+    expect(screen.getByRole('heading', { name: 'Xem lại yêu cầu' })).toBeInTheDocument()
+    expect(screen.getByText('Hỗ trợ chuyển đồ lên tầng hai')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /chỉnh sửa yêu cầu/i }))
     expect(screen.getByLabelText('Mô tả công việc')).toHaveValue('Hỗ trợ chuyển đồ lên tầng hai')
 
     fireEvent.click(screen.getByRole('button', { name: 'Người làm' }))
@@ -51,7 +53,6 @@ describe('Employer core demo flows', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Người thuê' }))
     fireEvent.click(screen.getByRole('button', { name: 'Tạo yêu cầu' }))
-    expect(screen.getByRole('status')).toHaveTextContent(/đã lưu bản nháp/i)
     expect(screen.getByLabelText('Mô tả công việc')).toHaveValue('Hỗ trợ chuyển đồ lên tầng hai')
   })
 
