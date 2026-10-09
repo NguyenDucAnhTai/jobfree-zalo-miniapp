@@ -9,9 +9,9 @@ export const navigationByContext: Record<UiContext, { id: Destination; label: st
   ],
   worker: [
     { id: 'home', label: 'Trang chủ', icon: '⌂' },
-    { id: 'jobs', label: 'Việc mới', icon: '✳' },
-    { id: 'active', label: 'Đang làm', icon: '▤' },
-    { id: 'income', label: 'Thu nhập', icon: '↗' },
+    { id: 'jobs', label: 'Việc của tôi', icon: '▣' },
+    { id: 'schedule', label: 'Lịch trình', icon: '▦' },
+    { id: 'wallet', label: 'Ví', icon: '▣' },
     { id: 'account', label: 'Tài khoản', icon: '○' },
   ],
 }
