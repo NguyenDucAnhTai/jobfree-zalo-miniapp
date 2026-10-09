@@ -126,10 +126,16 @@ export function EmployerRequestDetail({
       </section>
       <section className="assignment-preview" aria-labelledby="assignment-heading">
         <span className="section-kicker">KẾT QUẢ GHÉP MÔ PHỎNG</span><h2 id="assignment-heading">Người làm</h2>
-        {request.assignment && request.status !== 'replacement_matching' ? <div className="assignment-worker-card">
+        {request.status === 'replacement_matching' ? <>
+          {request.assignment?.status === 'replaced' && <div className="assignment-worker-card is-replaced-worker">
+            <span className="assignment-avatar" aria-hidden="true">A</span><div><strong>{request.assignment.displayName}</strong><span>Worker cũ · assignment đã kết thúc</span></div>
+            <span className="assignment-status">Đã thay thế</span>
+          </div>}
+          <div className="assignment-empty is-replacement-search" role="status"><strong>Đang tìm người làm mới</strong><span>Worker cũ không còn active. Chưa có Worker mới trong dữ liệu demo.</span></div>
+        </> : request.assignment ? <div className="assignment-worker-card">
           <span className="assignment-avatar" aria-hidden="true">A</span><div><strong>{request.assignment.displayName}</strong><span>★ {request.assignment.rating} · {request.assignment.completedJobs} job demo</span></div>
-          <span className="assignment-status">{request.assignment.status === 'active' ? 'Đang phân công demo' : 'Đã thay thế'}</span>
-        </div> : <div className="assignment-empty" role="status"><strong>{request.status === 'replacement_matching' ? 'Đang tìm người thay thế' : 'Chưa có người làm'}</strong><span>Frontend chỉ hiển thị kết quả mock; Employer không chọn ứng viên.</span></div>}
+          <span className="assignment-status">{request.assignment.status === 'active' ? 'Đang phân công demo' : request.assignment.status === 'replaced' ? 'Worker cũ · đã thay thế' : 'Assignment đã hủy'}</span>
+        </div> : <div className="assignment-empty" role="status"><strong>Chưa có người làm</strong><span>Frontend chỉ hiển thị kết quả mock; Employer không chọn ứng viên.</span></div>}
         {request.assignment?.shiftSchedule && request.status !== 'replacement_matching' && <p className="assignment-shift">Ca làm demo: {request.assignment.shiftSchedule}</p>}
       </section>
       <section className="request-timeline" aria-labelledby="timeline-heading"><span className="section-kicker">THEO DÕI DEMO</span><h2 id="timeline-heading">Tiến trình yêu cầu</h2>

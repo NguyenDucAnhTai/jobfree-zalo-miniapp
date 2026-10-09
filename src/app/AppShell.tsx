@@ -16,7 +16,7 @@ export function AppShell() {
   const [context, setContext] = useState<UiContext>('employer')
   const [destination, setDestination] = useState<Destination>('home')
   const [employerDraft, setEmployerDraft] = useState<EmployerRequestDraft>(emptyEmployerRequestDraft)
-  const [draftSaved, setDraftSaved] = useState(false)
+  const [savedEmployerDraft, setSavedEmployerDraft] = useState<EmployerRequestDraft>()
   const [localDraftRequest, setLocalDraftRequest] = useState<EmployerWorkRequest>()
   const [selectedRequestId, setSelectedRequestId] = useState(employerRequestScenarios[0].id)
 
@@ -32,20 +32,18 @@ export function AppShell() {
 
   function chooseService(serviceId: string) {
     setEmployerDraft((current) => ({ ...current, serviceId }))
-    setDraftSaved(false)
     setDestination('requestDraft')
   }
 
   function updateEmployerDraft(nextDraft: EmployerRequestDraft) {
     setEmployerDraft(nextDraft)
-    setDraftSaved(false)
   }
 
   function saveEmployerDraft() {
     const request = createDraftRequest(employerDraft)
+    setSavedEmployerDraft({ ...employerDraft })
     setLocalDraftRequest(request)
     setSelectedRequestId(request.id)
-    setDraftSaved(true)
     setDestination('requestSummary')
   }
 
@@ -75,9 +73,9 @@ export function AppShell() {
         ) : isEmployerScreen && destination === 'account' ? (
           <EmployerProfile onNavigate={navigate} />
         ) : isEmployerScreen && destination === 'requestDraft' ? (
-          <EmployerRequestDraftScreen draft={employerDraft} saved={draftSaved} backDestination={localDraftRequest ? 'requestSummary' : 'services'} onChange={updateEmployerDraft} onSave={saveEmployerDraft} onNavigate={navigate} />
+          <EmployerRequestDraftScreen draft={employerDraft} backDestination={localDraftRequest ? 'requestSummary' : 'services'} onChange={updateEmployerDraft} onSave={saveEmployerDraft} onNavigate={navigate} />
         ) : isEmployerScreen && destination === 'requestSummary' && localDraftRequest ? (
-          <EmployerRequestSummary request={localDraftRequest} draft={employerDraft} onEdit={() => { setDraftSaved(false); setDestination('requestDraft') }} onHistory={() => setDestination('history')} />
+          <EmployerRequestSummary request={localDraftRequest} draft={savedEmployerDraft ?? employerDraft} onEdit={() => setDestination('requestDraft')} onHistory={() => setDestination('history')} />
         ) : isEmployerScreen && destination === 'requestDetail' && selectedRequest ? (
           <EmployerRequestDetail request={selectedRequest} onBack={() => setDestination('history')} onSelectScenario={selectRequestScenario} />
         ) : (

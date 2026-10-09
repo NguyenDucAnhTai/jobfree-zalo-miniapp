@@ -242,6 +242,8 @@
 .assignment-empty { display: grid; gap: 5px; margin-top: 10px; padding: 12px; border: 1px dashed #dedbd3; border-radius: 10px; background: #fbfaf7; }
 .assignment-empty strong { color: #554c31; font-size: 10px; }
 .assignment-empty span, .assignment-shift { color: #87837a; font-size: 9px; line-height: 1.45; }
+.is-replaced-worker { border-color: #eadfc8; background: #faf7f0; }
+.assignment-empty.is-replacement-search { border-color: #e2c56a; background: #fffaf0; }
 .assignment-shift { margin-top: 8px; }
 .request-timeline { margin-bottom: 12px; }
 .request-timeline ol { display: grid; gap: 0; margin: 13px 0 0; padding: 0; list-style: none; }
