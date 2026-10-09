@@ -53,3 +53,12 @@
 - PR: not created. GitHub connector returned HTTP 403 `Resource not accessible by integration` for PR creation. Branch is pushed; manual PR form: `https://github.com/NguyenDucAnhTai/jobfree-zalo-miniapp/pull/new/feat/zmp-r2-employer-worker-figma` (base should be `dev`).
 
 Do not mark R2 approved or begin R3/R4 until independent review.
+
+## CSS hotfix — 2026-10-09
+
+- Root cause: `src/App.css` contained the application component styles but was absent from the `src/main.tsx` import graph.
+- Fix: import `./App.css` once from `src/main.tsx` after the tokens and global stylesheet.
+- Regression coverage: `src/styles-entry.test.ts` asserts the main entry imports `App.css` exactly once.
+- Production bundle check: `dist/index-CimtOT-T.css` (21.5 KB) is linked from `dist/index.html` and contains AppShell, bottom navigation, Employer hero/job card, and Worker home/hero/job card selectors.
+- Lint: PASS. Typecheck: PASS. Tests: PASS — 5 files / 14 tests. Build: PASS.
+- Browser Network/Styles and 393×852 / 402×874 visual checks: NOT VERIFIED because local socket access is blocked in this environment. Product Owner must inspect both roles in a browser/Zalo preview and send screenshots for follow-up if any visual issue remains.
