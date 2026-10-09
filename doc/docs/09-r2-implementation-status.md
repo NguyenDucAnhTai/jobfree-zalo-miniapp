@@ -45,11 +45,11 @@
 - Lint: PASS — `npm.cmd run lint`.
 - Typecheck: PASS — `npm.cmd run typecheck`; production build also reruns `tsc -b`.
 - Build: PASS — `npm.cmd run build`, Vite 8.3.4 emitted production assets.
-- Employer 393×852 visual check:
-- Worker 402×874 visual check:
+- Employer 393×852 visual check: NOT VERIFIED — in-app browser could not open local preview (timeout).
+- Worker 402×874 visual check: NOT VERIFIED — in-app browser could not open local preview (timeout).
 - Zalo runtime verification: not performed; no compatible ZMP plugin/runtime configured.
 - C2C review: blocked. C2C doctor did not recognize the current workspace and could not read local config. The required persistent sandbox allowlist command was rejected by automatic approval review, so no C2C INIT was sent.
-- Commit SHA:
-- PR URL:
+- Implementation commit SHA: `2921b76` (`feat: implement JobFree R2 employer and worker home`).
+- PR: not created. GitHub connector returned HTTP 403 `Resource not accessible by integration` for PR creation. Branch is pushed; manual PR form: `https://github.com/NguyenDucAnhTai/jobfree-zalo-miniapp/pull/new/feat/zmp-r2-employer-worker-figma` (base should be `dev`).
 
 Do not mark R2 approved or begin R3/R4 until independent review.
