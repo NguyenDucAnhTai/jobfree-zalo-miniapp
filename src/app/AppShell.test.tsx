@@ -8,7 +8,7 @@ describe('AppShell role context', () => {
 
     expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: /người thuê/i })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /việc mới quanh đây/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /job phù hợp với bạn/i })).not.toBeInTheDocument()
   })
 
   it('switches to worker home and resets worker navigation to home', () => {
@@ -16,8 +16,8 @@ describe('AppShell role context', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
 
-    expect(screen.getByRole('heading', { name: /việc mới quanh đây/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /ca làm sắp tới/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()
+    expect(screen.getByText('Phụ chuyển tối nay')).toBeInTheDocument()
     const navigation = screen.getByRole('navigation', { name: /người làm/i })
     expect(within(navigation).getByRole('button', { name: 'Trang chủ' })).toHaveAttribute('aria-current', 'page')
     expect(screen.queryByRole('heading', { name: /dịch vụ phổ biến/i })).not.toBeInTheDocument()
@@ -28,10 +28,10 @@ describe('AppShell role context', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
     expect(screen.getByRole('heading', { name: 'Công việc' })).toBeInTheDocument()
-    expect(screen.getByText(/chưa thuộc Round 1/i)).toBeInTheDocument()
+    expect(screen.getByText(/được lên kế hoạch cho round sau/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
-    expect(screen.getByRole('heading', { name: /việc mới quanh đây/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Công việc' })).not.toBeInTheDocument()
 
     const navigation = screen.getByRole('navigation', { name: /người làm/i })

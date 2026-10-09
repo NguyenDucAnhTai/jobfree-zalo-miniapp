@@ -16,12 +16,10 @@ Tokens were copied from `doc/src/theme/jobfree-tokens.css` into `src/theme/jobfr
 
 ## Validation record
 
-Fill in only after the commands and viewport checks have actually run:
-
-- Lint:
-- Typecheck:
-- Unit tests:
-- Production build:
-- Browser viewport 393×852:
-- Browser viewport 402×874:
+- Lint: PASS on `feat/zmp-r1-foundation` before the R2 branch.
+- Typecheck: PASS on `feat/zmp-r1-foundation` before the R2 branch.
+- Unit tests: 5 passed across 2 files on `feat/zmp-r1-foundation` before the R2 branch.
+- Production build: PASS on `feat/zmp-r1-foundation` before the R2 branch.
+- Browser viewport 393×852: not visually verified; in-app browser could not connect to the local dev server.
+- Browser viewport 402×874: not visually verified; in-app browser could not connect to the local dev server.
 - Zalo runtime verification: not performed in this browser-only environment.
