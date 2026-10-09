@@ -41,3 +41,11 @@
 - Navigation destinations outside this scope remain explicit demo placeholders.
 - The export contains a small portrait/avatar image inside a screenshot but no separate source asset. The implementation uses a synthetic initial avatar instead of cropping an image out of the screenshot.
 - Worker job dates are fixed at 10–12 October 2026 so fixture schedules remain consistent and do not depend on the machine clock.
+
+## R4 implementation notes
+
+- Worker profile and skills follow the static account and add-skills PNG hierarchy. Labels, profile metrics, and skill options use deterministic fictitious demo values; no identity verification is implied.
+- Worker readiness is an in-session UI toggle. It does not contact dispatch or publish availability.
+- Worker opportunities reuse the Home reference's visible job-card hierarchy as a separate listing because no dedicated opportunities-list PNG or prototype was included. This is a layout inference, not a verified Figma frame.
+- Worker Home's existing visual composition and five bottom tabs remain. Home discovery CTAs route to the separate R4 opportunities screen; jobs, schedule, and wallet remain explicit R5 placeholders.
+- All navigation and interactions are inferred from labels in static PNG exports; no Figma prototype metadata was available.

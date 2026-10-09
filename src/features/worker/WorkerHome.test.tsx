@@ -12,7 +12,7 @@ describe('Worker home reference implementation', () => {
     expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()
     expect(screen.getAllByRole('article')).toHaveLength(3)
     fireEvent.click(screen.getByRole('button', { name: /xem job gần tôi/i }))
-    expect(onNavigate).toHaveBeenCalledWith('jobs')
+    expect(onNavigate).toHaveBeenCalledWith('opportunities')
   })
 
   it('filters the fixed Worker jobs and exposes an empty state when appropriate', () => {

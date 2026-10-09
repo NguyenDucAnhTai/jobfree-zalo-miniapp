@@ -4,7 +4,7 @@ import type { Destination } from '../../types/domain'
 
 type JobFilter = 'Gần tôi' | 'Nhận ngay' | 'Lương cao' | 'Bắt đầu sớm'
 
-export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: (destination: Destination) => void; jobs?: typeof workerHomeJobs }) {
+export function WorkerHome({ onNavigate, jobs = workerHomeJobs, ready = true }: { onNavigate: (destination: Destination) => void; jobs?: typeof workerHomeJobs; ready?: boolean }) {
   const [filter, setFilter] = useState<JobFilter>('Gần tôi')
   const visibleJobs = useMemo(() => {
     if (filter === 'Nhận ngay') return jobs.filter((job) => job.tag === 'NHẬN NGAY')
@@ -19,7 +19,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
         <div className="worker-hero-copy">
           <h1 aria-label="Sẵn sàng nhận việc hôm nay">Sẵn sàng nhận việc<br aria-hidden="true" />hôm nay?</h1>
           <p>Có 8 job phù hợp gần bạn</p>
-          <button className="worker-hero-button" type="button" onClick={() => onNavigate('jobs')}>
+          <button className="worker-hero-button" type="button" onClick={() => onNavigate('opportunities')}>
             Xem job gần tôi <span aria-hidden="true">→</span>
           </button>
         </div>
@@ -29,7 +29,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
       <section className="worker-stats" aria-label="Thông tin hồ sơ demo">
         <div className="worker-stat"><span className="stat-symbol verified-symbol" aria-hidden="true">✦</span><strong>Đã xác thực</strong></div>
         <div className="worker-stat"><span className="stat-rating"><span aria-hidden="true">★</span> 4.8</span><strong>Rating</strong></div>
-        <div className="worker-stat"><span className="stat-symbol ready-symbol" aria-hidden="true">✓</span><strong>Sẵn sàng làm</strong></div>
+        <div className="worker-stat"><span className={`stat-symbol ready-symbol${ready ? '' : ' is-unavailable'}`} aria-hidden="true">{ready ? '✓' : 'Ⅱ'}</span><strong>{ready ? 'Sẵn sàng làm' : 'Đang tạm nghỉ'}</strong></div>
       </section>
 
       <section className="worker-job-section" aria-labelledby="worker-job-heading">
@@ -40,7 +40,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
         </div>
         <div className="worker-section-heading">
           <h2 id="worker-job-heading">Job phù hợp với bạn</h2>
-          <button className="worker-link-button" type="button" onClick={() => onNavigate('jobs')}>Xem tất cả</button>
+          <button className="worker-link-button" type="button" onClick={() => onNavigate('opportunities')}>Xem tất cả</button>
         </div>
         <div className="worker-job-list" aria-live="polite">
           {visibleJobs.length ? visibleJobs.map((job) => (

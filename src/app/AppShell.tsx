@@ -7,7 +7,11 @@ import { EmployerHome } from '../features/employer/EmployerHome'
 import { EmployerProfile, EmployerRequestDraftScreen, EmployerServiceCatalog } from '../features/employer/EmployerScreens'
 import { EmployerRequestDetail, EmployerRequestHistory, EmployerRequestSummary } from '../features/employer/EmployerLifecycleScreens'
 import { WorkerHome } from '../features/worker/WorkerHome'
-import { emptyEmployerRequestDraft } from '../mocks/fixtures'
+import { WorkerOpportunities } from '../features/worker/WorkerOpportunities'
+import { WorkerProfile } from '../features/worker/WorkerProfile'
+import { WorkerReadiness } from '../features/worker/WorkerReadiness'
+import { WorkerSkills } from '../features/worker/WorkerSkills'
+import { emptyEmployerRequestDraft, workerProfileDemo, workerSavedSkillIds } from '../mocks/fixtures'
 import { createDraftRequest, employerRequestScenarios, getEmployerRequestById } from '../mocks/employerRequestAdapter'
 import { destinationLabel, isDestinationForContext } from '../navigation/navigation'
 import type { Destination, EmployerRequestDraft, EmployerWorkRequest, UiContext } from '../types/domain'
@@ -19,6 +23,9 @@ export function AppShell() {
   const [savedEmployerDraft, setSavedEmployerDraft] = useState<EmployerRequestDraft>()
   const [localDraftRequest, setLocalDraftRequest] = useState<EmployerWorkRequest>()
   const [selectedRequestId, setSelectedRequestId] = useState(employerRequestScenarios[0].id)
+  const [workerReady, setWorkerReady] = useState(true)
+  const [workerSkillIds, setWorkerSkillIds] = useState<string[]>(workerSavedSkillIds)
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>()
 
   function changeContext(nextContext: UiContext) {
     setContext(nextContext)
@@ -56,7 +63,7 @@ export function AppShell() {
     setSelectedRequestId(requestId)
   }
 
-  const activeTab = destination === 'requestDraft' || destination === 'requestSummary' ? 'services' : destination === 'requestDetail' ? 'history' : destination
+  const activeTab = destination === 'requestDraft' || destination === 'requestSummary' ? 'services' : destination === 'requestDetail' ? 'history' : destination === 'skills' || destination === 'readiness' ? 'account' : destination === 'opportunities' || destination === 'opportunityDetail' ? 'home' : destination
   const isHome = destination === 'home'
   const isEmployerScreen = context === 'employer'
   const selectedRequest = getEmployerRequestById(selectedRequestId, localDraftRequest)
@@ -66,7 +73,7 @@ export function AppShell() {
       <div className="app-scroll-area">
         <SharedHeader context={context} />
         <RoleSwitcher key={context} context={context} onChange={changeContext} />
-        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} />) : isEmployerScreen && destination === 'services' ? (
+        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} ready={workerReady} />) : isEmployerScreen && destination === 'services' ? (
           <EmployerServiceCatalog onChoose={chooseService} />
         ) : isEmployerScreen && destination === 'history' ? (
           <EmployerRequestHistory requests={employerRequests} onOpen={openRequest} />
@@ -78,6 +85,16 @@ export function AppShell() {
           <EmployerRequestSummary request={localDraftRequest} draft={savedEmployerDraft ?? employerDraft} onEdit={() => setDestination('requestDraft')} onHistory={() => setDestination('history')} />
         ) : isEmployerScreen && destination === 'requestDetail' && selectedRequest ? (
           <EmployerRequestDetail request={selectedRequest} onBack={() => setDestination('history')} onSelectScenario={selectRequestScenario} />
+        ) : !isEmployerScreen && destination === 'account' ? (
+          <WorkerProfile profile={workerProfileDemo} skillCount={workerSkillIds.length} onNavigate={navigate} />
+        ) : !isEmployerScreen && destination === 'skills' ? (
+          <WorkerSkills selectedIds={workerSkillIds} onChange={setWorkerSkillIds} onSave={() => setDestination('account')} />
+        ) : !isEmployerScreen && destination === 'readiness' ? (
+          <WorkerReadiness ready={workerReady} onChange={setWorkerReady} />
+        ) : !isEmployerScreen && destination === 'opportunities' ? (
+          <WorkerOpportunities onNavigate={navigate} onSelect={setSelectedOpportunityId} />
+        ) : !isEmployerScreen && destination === 'opportunityDetail' ? (
+          <main className="placeholder-content worker-detail-placeholder"><span className="placeholder-icon" aria-hidden="true">⌕</span><span className="section-kicker">ROUND 5 · DEMO</span><h1>Chi tiết việc</h1><p>{selectedOpportunityId ? `Cơ hội ${selectedOpportunityId} được chọn trong dữ liệu demo.` : 'Thông tin việc làm chi tiết sẽ được triển khai ở round sau.'}</p><button className="secondary-action" type="button" onClick={() => setDestination('opportunities')}>Quay lại việc mới</button><p>Chưa có chức năng nhận việc.</p></main>
         ) : (
           <main className="placeholder-content">
             <span className="placeholder-icon" aria-hidden="true">{['services', 'jobs', 'schedule', 'wallet'].includes(destination) ? '▦' : '⌂'}</span>

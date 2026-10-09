@@ -56,7 +56,7 @@ The handoff's many Sketch variants are grouped into the matching/detail view for
 - Worker visual 402×874: NOT VERIFIED — local preview was not reachable from the browser tool.
 - ZMP runtime: NOT VERIFIED — only browser production build was available; no Zalo client runtime check.
 - Review fixes: saved draft summary consistency and replacement matching presentation were corrected; Worker Home/filter/navigation source files were not edited. Visual screenshots remain unverified.
-- Commit SHA: `b81cc1a72a09f1e3a7aab1e4ef665254bfc5b70f`.
+- Commit SHA: `53cda5f5c79eef24a192557bb861ef94a0b0bb95`.
 - PR URL / base: PR creation via the connected GitHub integration previously returned HTTP 403 (`Resource not accessible by integration`). Updates are pushed to the existing R3 branch; target base is `feat/zmp-r2-employer-worker-figma` because R2 is not merged into `dev`.
 
 Wait for independent Product Owner/reviewer inspection before opening R4.
