@@ -11,6 +11,60 @@ export type Destination =
   | 'schedule'
   | 'wallet'
   | 'requestDraft'
+  | 'requestSummary'
+  | 'requestDetail'
+
+export type WorkRequestStatus =
+  | 'draft'
+  | 'funding_pending'
+  | 'funding_failed'
+  | 'matching'
+  | 'assigned'
+  | 'replacement_matching'
+  | 'awaiting_employer_decision'
+  | 'completed'
+  | 'cancelled'
+
+export type AssignmentStatus = 'active' | 'replaced' | 'cancelled'
+
+export interface DemoQuotePreview {
+  unitRate: number
+  durationHours: number
+  referenceTotal: number
+  currency: 'VND'
+  disclaimer: string
+}
+
+export interface WorkRequestTimelineEvent {
+  id: string
+  label: string
+  occurredAt: string
+  note: string
+  completed: boolean
+}
+
+export interface DemoWorkerAssignment {
+  displayName: string
+  rating: string
+  completedJobs: number
+  status: AssignmentStatus
+  shiftSchedule?: string
+}
+
+export interface EmployerWorkRequest {
+  id: string
+  serviceId: string
+  serviceLabel: string
+  details: string
+  location: string
+  schedule: string
+  durationHours: number
+  referenceBudget: number
+  status: WorkRequestStatus
+  createdAt: string
+  timeline: WorkRequestTimelineEvent[]
+  assignment?: DemoWorkerAssignment
+}
 
 export interface EmployerProfileItem {
   id: string
