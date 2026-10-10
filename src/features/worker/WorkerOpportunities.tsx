@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { getWorkerOpportunityMock } from '../../mocks/workerMockClient'
 import type { AsyncState, Destination, WorkerOpportunityFilter } from '../../types/domain'
+import { workerScheduleKey } from '../../utils/workerDate'
 
 const filters: WorkerOpportunityFilter[] = ['Tất cả', 'Gần tôi', 'Nhận ngay', 'Lương cao', 'Bắt đầu sớm']
 const states: { value: AsyncState; label: string }[] = [
@@ -21,7 +22,7 @@ export function WorkerOpportunities({ onNavigate, onSelect }: {
     if (filter === 'Nhận ngay') return list.filter((job) => job.tag === 'NHẬN NGAY')
     if (filter === 'Gần tôi') return list.filter((job) => job.distanceLabel.includes('Gần') || job.distanceLabel.includes('km'))
     if (filter === 'Lương cao') return list.sort((a, b) => amount(b.pay) - amount(a.pay))
-    if (filter === 'Bắt đầu sớm') return list.sort((a, b) => a.schedule.localeCompare(b.schedule))
+    if (filter === 'Bắt đầu sớm') return list.sort((a, b) => workerScheduleKey(a.schedule).localeCompare(workerScheduleKey(b.schedule)))
     return list
   }, [filter, result.items])
 

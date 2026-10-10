@@ -13,12 +13,12 @@
 | Figma page/frame ID | Exported screen | Purpose | Visible components | Prototype/interaction evidence | UI state visible | Source | Implementation |
 |---|---|---|---|---|---|---|---|
 | unavailable | `Trang chủ JobFree.png` | Worker job discovery home | Greeting/header, notification icon, yellow hero, profile status/rating/readiness, filter chips, job cards, bottom nav | Static export only; filters and navigation are inferred from labels | Populated jobs; verified/ready profile | Local PNG export | Implemented in R2, approximation from image |
-| unavailable | `Trang Việc của tôi.png` | Worker job list/history | Job tabs, upcoming job, pending confirmation, recent history, bottom nav | Static export only | Upcoming, pending, completed | Local PNG export | Deferred to R4/R5 |
-| unavailable | `Lịch trình.png` | Worker availability and shifts | Calendar strip, scheduled shift cards, status chips, bottom nav | Static export only | Scheduled; awaiting confirmation | Local PNG export | Deferred to R5 |
-| unavailable | `Ví JobFree.png` | Worker earnings view | Balance summary, withdrawal/bank actions, income metrics, transaction list, bottom nav | Static export only | Pending and completed transactions | Local PNG export | Deferred to R5; no real money behavior |
+| unavailable | `Trang Việc của tôi.png` | Worker job list/history | Job tabs, upcoming job, pending confirmation, recent history, bottom nav | Static export only | Upcoming, pending, completed | Local PNG export | Implemented in R5 as fixture-backed jobs and details; inferred states marked demo |
+| unavailable | `Lịch trình.png` | Worker availability and shifts | Calendar strip, scheduled shift cards, status chips, bottom nav | Static export only | Scheduled; awaiting confirmation | Local PNG export | Implemented in R5 with a fixed demo calendar and shift state flow |
+| unavailable | `Ví JobFree.png` | Worker earnings view | Balance summary, withdrawal/bank actions, income metrics, transaction list | Static export only | Pending and completed transactions | Local PNG export | Implemented in R5 from fixed transactions; withdrawal controls are nonfunctional |
 | unavailable | `Tài khoản.png` | Worker profile and settings | Profile card, rating/jobs/reliability, skill/availability/verification menus, settings, bottom nav | Static export only | Profile with verification indicator | Local PNG export | Deferred to R4; no real identity data |
 | unavailable | `Thêm Kỹ Năng.png` | Worker skill profile editor | Search, selected skill chips, skill groups, certificate cards, save button | Static export only | Selected skills and certificates | Local PNG export | Deferred to R4 |
-| unavailable | `Pop-up việc.png` | New job offer overlay | Offer summary, pay, schedule/location, defer and accept actions | Static export only; no verified prototype edge | Offer available, confirm/defer choices | Local PNG export | Deferred to R5; no offer acceptance in R2 |
+| unavailable | `Pop-up việc.png` | New job offer overlay | Offer summary, pay, schedule/location, defer and accept actions | Static export only; no verified prototype edge | Offer available, confirm/defer choices | Local PNG export | Implemented in R5 as a demo-only overlay; accepted fixture opens a synthetic shift |
 | unavailable | `Đăng ký.png` | Worker sign-up | Registration form and continue control | Static export only | Onboarding | Local PNG export | Deferred; no authentication |
 | unavailable | `Xác thực.png` | Phone verification entry | Verification explanation and actions | Static export only | Onboarding | Local PNG export | Deferred; no OTP/network calls |
 | unavailable | `Xác thực OTP.png` | OTP entry | Six code cells, timer, confirm, VNeID alternative | Static export only | OTP pending | Local PNG export | Deferred; no OTP/network calls |
@@ -49,3 +49,11 @@
 - Worker opportunities reuse the Home reference's visible job-card hierarchy as a separate listing because no dedicated opportunities-list PNG or prototype was included. This is a layout inference, not a verified Figma frame.
 - Worker Home's existing visual composition and five bottom tabs remain. Home discovery CTAs route to the separate R4 opportunities screen; jobs, schedule, and wallet remain explicit R5 placeholders.
 - All navigation and interactions are inferred from labels in static PNG exports; no Figma prototype metadata was available.
+
+## R5 implementation notes
+
+- R5 implements Worker “Việc của tôi”, shift schedule, shift details and wallet from the corresponding PNG hierarchy. The calendar is fixed to 8–14 October 2026; shifts, balances and transactions are deterministic fictional fixtures.
+- The new-job pop-up and offer detail use a local decision scenario. Only the explicit success fixture adds a synthetic assignment/shift; expired, taken, withdrawn, superseded, invalid and declined outcomes do not. This does not call matching or dispatch.
+- Shift actions only advance through the displayed local demo timeline. They do not use GPS, camera, employer confirmation services, or backend state.
+- Wallet totals are derived from demo transactions and completed demo shifts. Payout and bank controls are disabled; no funds or payment details are handled.
+- UI details that cannot be resolved from the static PNGs (exact copy, navigation destinations, transition labels, loading/error treatments and responsive behavior) are implementation approximations. No Figma source or prototype was available; do not claim pixel-perfect fidelity.

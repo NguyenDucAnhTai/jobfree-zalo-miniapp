@@ -10,7 +10,7 @@ export function WorkerProfile({ profile, skillCount, onNavigate }: {
     <p className="worker-core-kicker">TÀI KHOẢN · DEMO</p>
     <h1>Tài khoản</h1>
     <section className="worker-profile-card" aria-label="Hồ sơ người làm demo">
-      <div className="worker-profile-top"><span className="worker-avatar" aria-hidden="true">{profile.initials}</span><div><h2>{profile.displayName}</h2><p>{profile.phoneLabel}</p><span className="worker-demo-badge">Hồ sơ minh họa · chưa xác thực</span></div></div>
+      <div className="worker-profile-top"><span className="worker-avatar" aria-hidden="true">{profile.initials}</span><div><h2>{profile.displayName}</h2><p>{profile.phoneLabel}</p><span className="worker-demo-badge">Hồ sơ minh họa · {profile.verificationStatus === 'verified' ? 'đã xác thực demo' : 'chưa xác thực'}</span></div></div>
       <div className="worker-profile-stats"><div><strong>★ {profile.rating}</strong><span>Đánh giá demo</span></div><div><strong>{profile.completedJobs}</strong><span>Việc hoàn thành</span></div><div><strong>{profile.reliability}%</strong><span>Độ tin cậy demo</span></div></div>
     </section>
     <section className="worker-profile-menu" aria-label="Thông tin công việc">

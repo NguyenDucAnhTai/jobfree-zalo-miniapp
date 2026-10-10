@@ -19,16 +19,18 @@ describe('Worker core demo screens', () => {
   })
 
   it('filters and saves Worker skills in local demo state', () => {
-    const onChange = vi.fn()
-    const onSave = vi.fn()
-    render(<WorkerSkills selectedIds={['moving']} onChange={onChange} onSave={onSave} />)
+    const onSave = vi.fn((ids: string[]) => ids)
+    const onCancel = vi.fn()
+    render(<WorkerSkills selectedIds={['moving']} onSave={onSave} onCancel={onCancel} />)
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'đóng gói' } })
     expect(screen.getByRole('button', { name: /đóng gói hàng hóa/i })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /hỗ trợ sự kiện/i })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /đóng gói hàng hóa/i }))
-    expect(onChange).toHaveBeenCalledWith(['moving', 'packing'])
+    expect(onSave).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: /lưu kỹ năng demo/i }))
-    expect(onSave).toHaveBeenCalledOnce()
+    expect(onSave).toHaveBeenCalledWith(['moving', 'packing'])
+    fireEvent.click(screen.getByRole('button', { name: /tài khoản/i }))
+    expect(onCancel).toHaveBeenCalledOnce()
     expect(workerSkillOptions.length).toBeGreaterThan(0)
   })
 

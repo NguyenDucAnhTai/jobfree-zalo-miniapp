@@ -77,7 +77,7 @@ export const workerHomeJobs: WorkerHomeJob[] = [
 ]
 
 export const workerProfileDemo: WorkerProfileDemo = {
-  displayName: 'Nguyễn Minh Nam', initials: 'N', rating: '4.8', completedJobs: 12,
+  displayName: 'Nguyễn Minh Nam', initials: 'N', rating: '4.8', completedJobs: 12, verificationStatus: 'unverified',
   reliability: 92, serviceArea: 'Quận 1, TP. HCM', phoneLabel: 'Số điện thoại demo',
 }
 

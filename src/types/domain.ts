@@ -15,6 +15,8 @@ export type Destination =
   | 'requestDetail'
   | 'opportunities'
   | 'opportunityDetail'
+  | 'shiftDetail'
+  | 'transactionDetail'
   | 'skills'
   | 'readiness'
   | 'area'
@@ -134,6 +136,7 @@ export interface WorkerProfileDemo {
   reliability: number
   serviceArea: string
   phoneLabel: string
+  verificationStatus: 'verified' | 'unverified'
 }
 
 export interface WorkerSkillDemo {
