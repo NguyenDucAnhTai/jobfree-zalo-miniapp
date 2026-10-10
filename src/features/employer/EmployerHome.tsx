@@ -23,7 +23,7 @@ export function EmployerHome({ onNavigate, onSelectService, homeState = 'success
         <div className="section-heading"><div><span className="section-kicker">BẮT ĐẦU TỪ NHU CẦU</span><h2 id="services-title">Dịch vụ phổ biến</h2></div><button className="text-button" type="button" onClick={() => onNavigate('services')}>Xem tất cả <span aria-hidden="true">→</span></button></div>
         <div className="service-grid">
           {employerServices.map((service) => <button className={`service-card service-card--${service.id}`} type="button" key={service.id} aria-label={`${service.title}: ${service.description}`} onClick={() => onSelectService(service.id)}>
-            <ServiceArtwork service={service.id as 'moving' | 'cleaning' | 'delivery' | 'events'} label={`Minh họa dịch vụ ${service.title}`} />
+            <ServiceArtwork service={service.id as 'moving' | 'cleaning' | 'delivery' | 'events'} label={`Minh họa dịch vụ ${service.title}`} decorative />
             <strong>{service.title}</strong><small>{service.description}</small>
           </button>)}
         </div>
@@ -46,7 +46,7 @@ export function EmployerHome({ onNavigate, onSelectService, homeState = 'success
       <section className="section-block jobs-section" aria-labelledby="employer-jobs-title">
         <div className="section-heading"><div><span className="section-kicker">CẬP NHẬT GẦN ĐÂY</span><h2 id="employer-jobs-title">Công việc của bạn</h2></div><button className="text-button" type="button" onClick={() => onNavigate('history')}>Lịch sử <span aria-hidden="true">→</span></button></div>
         {homeState === 'success' && jobs.length ? jobs.map((job) => <article className="job-card employer-job-card" key={job.id}>
-          <div className="employer-recent-top"><ServiceArtwork service="moving" label="Minh họa hỗ trợ chuyển đồ" className="employer-recent-art" /><span className="status-pill status-searching"><i />{job.tag}</span></div>
+          <div className="employer-recent-top"><ServiceArtwork service="moving" label="Minh họa hỗ trợ chuyển đồ" className="employer-recent-art" decorative /><span className="status-pill status-searching"><i />{job.tag}</span></div>
           <h3>{job.title}</h3><p className="job-meta"><span aria-hidden="true">⌖</span>{job.location}</p>
           <div className="job-footer"><span><small>Thời gian</small><strong>{job.schedule}</strong></span><span><small>Ngân sách dự kiến</small><strong>{job.pay}</strong></span></div>
           <button className="employer-job-open" type="button" onClick={() => onNavigate('history')}>Theo dõi yêu cầu demo <span aria-hidden="true">→</span></button>

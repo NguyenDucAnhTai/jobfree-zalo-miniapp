@@ -14,7 +14,7 @@ export function EmployerServiceCatalog({ onChoose }: { onChoose: (serviceId: str
         <h2 id={`catalog-${index}`}>{category}</h2>
         <div className="catalog-list employer-service-list">{employerServices.filter((service) => service.category === category).map((service) => (
           <button className="catalog-card" type="button" key={service.id} onClick={() => onChoose(service.id)}>
-            <ServiceArtwork service={service.id as 'moving' | 'cleaning' | 'delivery' | 'events'} label={`Minh họa dịch vụ ${service.title}`} className="catalog-art" />
+            <ServiceArtwork service={service.id as 'moving' | 'cleaning' | 'delivery' | 'events'} label={`Minh họa dịch vụ ${service.title}`} className="catalog-art" decorative />
             <span className="catalog-card-copy"><strong>{service.title}</strong><small>{service.description}</small><small className="catalog-price">{service.countLabel} · Giá tham khảo demo</small></span>
             <span className="catalog-arrow" aria-hidden="true">›</span>
           </button>

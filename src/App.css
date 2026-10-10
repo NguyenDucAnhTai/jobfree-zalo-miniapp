@@ -420,18 +420,18 @@
 .employer-demo-label { display: flex; align-items: center; gap: 6px; margin: 0 1px 9px; color: #776a42; font-size: 8px; font-weight: 800; letter-spacing: .65px; }
 .employer-demo-label > span { color: #b58800; font-size: 8px; }
 .employer-carousel { margin: 0; }
-.employer-banner { min-height: 194px; display: flex; align-items: center; position: relative; overflow: hidden; padding: 18px 17px; border: 1px solid #f0d56e; border-radius: 22px; background: linear-gradient(115deg, #fff0b6 0%, #ffdc62 65%, #ffc400 100%); isolation: isolate; touch-action: pan-y; user-select: none; }
+.employer-banner { min-height: 194px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(92px, .72fr); align-items: center; gap: 10px; position: relative; overflow: hidden; padding: 18px 17px; border: 1px solid #f0d56e; border-radius: 22px; background: linear-gradient(115deg, #fff0b6 0%, #ffdc62 65%, #ffc400 100%); isolation: isolate; touch-action: pan-y; user-select: none; }
 .employer-banner::after { content: ''; position: absolute; z-index: -1; width: 200px; height: 200px; right: -58px; top: -75px; border-radius: 50%; background: #fff7d450; }
-.employer-banner-copy { position: relative; z-index: 2; width: 67%; }
+.employer-banner-copy { position: relative; z-index: 2; min-width: 0; }
 .employer-banner .eyebrow { color: #745800; font-size: 8px; letter-spacing: .95px; }
-.employer-banner h1 { margin: 7px 0 6px; color: #201b0e; font-size: clamp(19px, 5vw, 23px); line-height: 1.15; letter-spacing: -.65px; font-weight: 800; }
-.employer-banner h1 span { display: contents; }
+.employer-banner h1 { margin: 7px 0 6px; color: #201b0e; font-size: clamp(19px, 5vw, 23px); line-height: 1.15; letter-spacing: -.65px; font-weight: 800; overflow-wrap: anywhere; }
 .employer-banner p { max-width: 230px; color: #5f512c; font-size: 10px; line-height: 1.4; }
 .employer-banner-cta { min-height: 36px; display: inline-flex; align-items: center; gap: 11px; margin-top: 10px; padding: 0 12px; border: 0; border-radius: 11px; background: #211c10; color: #fffdf6; font-size: 10px; font-weight: 750; box-shadow: 0 4px 10px #35290024; }
 .employer-banner-cta span { font-size: 15px; line-height: 1; }
-.service-art { display: block; flex: 0 0 auto; width: 64px; height: 64px; border-radius: 15px; background-image: url('/images/employer-services-sprite.png'); background-repeat: no-repeat; background-size: 200% 200%; background-position: var(--service-art-position, 0% 0%); }
-.employer-banner-art { position: absolute; z-index: 1; right: -3px; bottom: -4px; width: 46%; height: 88%; border-radius: 0; background-color: transparent; }
-.employer-banner--support .employer-banner-art { width: 49%; }
+.service-art { display: block; flex: 0 0 auto; width: 64px; height: 64px; border-radius: 15px; overflow: hidden; }
+.service-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.service-art-fallback { display: block; width: 100%; height: 100%; background: radial-gradient(circle at 50% 42%, #ffffff9c 0 24%, transparent 25%); }
+.employer-banner-art { width: 100%; height: auto; max-height: 156px; aspect-ratio: 1; justify-self: center; align-self: center; border-radius: 0; background-color: transparent !important; }
 .employer-banner--moving { background: linear-gradient(118deg, #fff0bd 0%, #ffe07a 70%, #ffd23b 100%); }
 .employer-banner--more-help { background: linear-gradient(118deg, #fff0c4 0%, #ffe18a 69%, #ffd458 100%); }
 .employer-carousel-controls { display: flex; align-items: center; justify-content: space-between; min-height: 38px; padding: 3px 2px 0; }
@@ -490,10 +490,9 @@
 .employer-service-list .catalog-card-copy .catalog-price { color: #846500; }
 .employer-service-list .catalog-arrow { color: #9b7a14; }
 @media (max-width: 360px) {
-  .employer-banner { min-height: 184px; padding-inline: 13px; }
-  .employer-banner-copy { width: 70%; }
+  .employer-banner { min-height: 184px; grid-template-columns: minmax(0, 1fr) minmax(68px, .55fr); gap: 7px; padding-inline: 13px; }
   .employer-banner h1 { font-size: 19px; }
-  .employer-banner-art { right: -12px; width: 45%; height: 81%; }
+  .employer-banner-art { max-height: 112px; }
   .employer-home .service-card { min-height: 143px; grid-template-rows: 82px auto auto; }
   .employer-home .service-card .service-art { height: 82px; }
   .employer-utility-card { grid-template-columns: 29px minmax(0, 1fr) 8px; gap: 5px; padding: 7px; }

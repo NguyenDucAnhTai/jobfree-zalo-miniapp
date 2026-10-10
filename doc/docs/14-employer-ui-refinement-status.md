@@ -26,12 +26,16 @@ Banner fixtures in `src/mocks/employerHomeFixtures.ts`:
 
 The carousel supports horizontal touch gestures, previous/next buttons and selectable indicators. It does not auto-rotate. Banner copy contains no discount or matching guarantee.
 
-## Artwork and service catalog
+## Review fix: mobile banner and artwork (Iteration 2)
 
-- Asset: `public/images/employer-services-sprite.png`.
-- Provenance: generated for this project with the built-in image-generation tool; a single 2×2 local sprite contains moving/logistics, cleaning, delivery and event-assistance illustrations. No external images, hotlinks, third-party brand assets or text/logo overlays are used.
-- The sprite is cropped with CSS background positions into accessible service artwork elements. Each has a descriptive accessible name and a pastel background fallback if its local image cannot load.
-- Existing service IDs, descriptions, reference labels and `onSelectService` behavior are preserved. The catalog uses the same illustrations and retains the fixture’s existing demo reference labels.
+- Review baseline: `99cf4ad33d5a84609ec099485c96f51decb3d1ce`; branch remains `feat/zmp-employer-ui-refinement`.
+- Banner root cause: the copy used a 67% width while art was absolutely positioned at roughly 46–49%; these independent widths overlapped. The heading was also rendered with forced `<br>` elements from title arrays.
+- Banner fix: the banner is now a two-column CSS grid with separate text and art tracks. All three titles are ordinary text and wrap naturally; the copy has `min-width: 0`. At narrow widths the art track shrinks. Carousel indicators, arrows, swipe and CTA destinations remain unchanged.
+- Image root cause: one 2×2 sprite was painted at `background-size: 200% 200%` in containers with different aspect ratios, stretching each crop.
+- Image fix: extracted four 623×623 crops from the project-generated source, preserving each panel's square aspect ratio. Encoded locally as JPEG quality 88 because no WebP encoder is available in the environment. Original source is retained at `doc/design-reference/employer-services/employer-services-sprite.png`; it is no longer a public runtime asset.
+- Assets: `employer-moving.jpg` 53,668 bytes; `employer-cleaning.jpg` 62,468 bytes; `employer-delivery.jpg` 60,756 bytes; `employer-events.jpg` 57,899 bytes (234,791 bytes combined vs 1,778,811-byte source sprite, about 87% smaller).
+- `ServiceArtwork` now uses local `<img>` elements, `object-fit: contain`, centered positioning, lazy loading and async decoding. Informative images retain descriptive alt/fallback labels; category/catalog/recent-request art is marked decorative because adjacent controls already name the service. Failed loads show a contained pastel fallback.
+- Existing service IDs, descriptions, demo reference labels and `onSelectService` behavior are unchanged.
 
 ## Utilities and request preview
 
@@ -52,17 +56,18 @@ The carousel supports horizontal touch gestures, previous/next buttons and selec
 
 ## Verification
 
-- Employer and Worker were inspected in the local browser at its default viewport. Employer hero and category artwork rendered; switching to Worker retained its existing dashboard, opportunity list and five-tab navigation.
-- Exact Employer viewports 393×852 and 375×812, and Worker viewport 402×874: `NOT VERIFIED`; the browser viewport override was unavailable in this session.
-- Zalo Mini App runtime: `NOT VERIFIED`.
+- Tests: `PASS` — `npm run test`; 11 files / 87 tests. Employer refinement coverage includes all three banner copy/CTA destinations, local image mappings, ratio-safe image treatment, broken-image fallback, service selection, Employer flow regression, Worker regression and a single `App.css` import guard.
 - Lint: `PASS` — `npm run lint`.
 - Typecheck: `PASS` — `npm run typecheck`.
-- Tests: `PASS` — `npm run test`; 11 files / 83 tests. Targeted Employer refinement + Employer core: 16 passed. AppShell and Employer lifecycle suites also passed independently.
-- Production build: `PASS` — `npm run build`; CSS emitted as `dist/assets/index-Bk9Uw6dV.css` (63.96 kB) and JavaScript as `dist/assets/index-_G1Hq-Ke.js` (312.69 kB).
-- Public asset: `PASS` — `dist/images/employer-services-sprite.png` included (1,778,811 bytes); CSS remains imported through the existing main entry.
+- Production build: `PASS` — `npm run build`; CSS emitted as `dist/assets/index-Dd7SDsMU.css` (64.05 kB) and JavaScript as `dist/assets/index-Da6KCKqF.js` (312.97 kB).
+- Production CSS/assets: `PASS` — stylesheet import count is one; built CSS contains grid and `object-fit` declarations. Four local image files are emitted to `dist/images/` (234,791 bytes combined); the source sprite is not emitted to runtime assets.
+- Employer/Worker viewport matrix requested by review: `NOT VERIFIED` pending real screenshots. The available in-app browser control in this session does not expose an explicit viewport override, so no fixed-size screenshot is claimed. Employer 320×700, 360×780, 375×812, 393×852, 402×874 and 440×956; Worker 375×812 and 402×874 remain unverified.
+- Banner text/art separation and image aspect treatment are covered at source/test level only; JSDOM does not establish rendered geometry.
+- No rendered screenshots were captured in this iteration; the local preview URL did not load in the available browser. No screenshot evidence path is available.
+- Zalo Mini App runtime: `NOT VERIFIED`.
 
 ## Known limitations
 
-- The generated sprite is a single 1.78 MB raster sheet rather than separate optimized WebP files; CSS crops each panel at render time. It is reused for the carousel and service cards, avoiding multiple network image requests, but a WebP conversion may reduce transfer size further.
-- Browser inspection was at the environment’s default viewport, not the requested fixed mobile dimensions.
+- WebP was preferred by the review but no local encoder was available; optimized JPEG crops are used instead.
+- Fixed mobile viewport screenshot verification remains outstanding.
 - Artwork is illustrative demo content and does not imply available workers, service guarantees, live pricing or matching results.

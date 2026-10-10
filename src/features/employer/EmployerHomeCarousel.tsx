@@ -28,7 +28,7 @@ export function EmployerHomeCarousel({ onNavigate }: { onNavigate: (destination:
       <article className={`employer-banner employer-banner--${banner.id}`} aria-live="polite" aria-roledescription="slide" aria-label={`${activeIndex + 1} trên ${employerHomeBanners.length}`}>
         <div className="employer-banner-copy">
           <span className="eyebrow">{banner.eyebrow}</span>
-          <h1 aria-label={banner.title.join(' ')}>{banner.title.map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</h1>
+          <h1>{banner.title}</h1>
           <p>{banner.description}</p>
           <button className="employer-banner-cta" type="button" onClick={() => onNavigate(banner.destination)}>
             {banner.cta}<span aria-hidden="true">→</span>
@@ -38,7 +38,7 @@ export function EmployerHomeCarousel({ onNavigate }: { onNavigate: (destination:
       </article>
       <div className="employer-carousel-controls">
         <div className="employer-carousel-dots" role="group" aria-label="Chọn banner">
-          {employerHomeBanners.map((item, index) => <button key={item.id} type="button" aria-label={`Banner ${index + 1}: ${item.title.join(' ')}`} aria-current={index === activeIndex ? 'true' : undefined} className={index === activeIndex ? 'is-active' : ''} onClick={() => goTo(index)} />)}
+          {employerHomeBanners.map((item, index) => <button key={item.id} type="button" aria-label={`Banner ${index + 1}: ${item.title}`} aria-current={index === activeIndex ? 'true' : undefined} className={index === activeIndex ? 'is-active' : ''} onClick={() => goTo(index)} />)}
         </div>
         <div className="employer-carousel-arrows">
           <button type="button" aria-label="Banner trước" onClick={() => goTo(activeIndex - 1)} disabled={activeIndex === 0}>‹</button>
