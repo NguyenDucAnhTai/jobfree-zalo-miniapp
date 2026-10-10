@@ -37,7 +37,7 @@
 - Finding R5-01: fixed the planned-time/event-time confusion. For an 18:00–22:00 shift, lifecycle occurrences are 17:15 (en route), 18:00 (check-in), 22:00 (awaiting confirmation), and 22:10 (complete); 18:00–22:00 remains the planned shift window. Overnight tests verify next-day event ordering.
 - Finding R5-02: added three controlled exceptional fixtures. My Jobs shows their event timelines; Schedule links to the same detail fixtures; Shift Detail labels them and omits actions. These fixtures are read-only and excluded from earned transactions.
 - Offer, wallet, skills save/cancel, Employer lifecycle, role isolation and CSS regressions are included in the full passing suite. Employer source was not changed.
-- Review-fix implementation commit: `97e2b73d2dd0d708f9996dbd73a90794d5f04ee6` (`fix(worker): correct shift timelines and exceptions`).
+- Review-fix implementation commit: `97e2b735469fb823c86acba41a05b2dbe03d7732` (`fix(worker): correct shift timelines and exceptions`).
 
 ## Known limitations
 
@@ -50,5 +50,5 @@
 
 - Review request: `JOBFREE-ZMP-R5`.
 - Original R5 implementation commit: `37296e3` (`feat(worker): implement R5 work workflows`).
-- Review-fix implementation commit: `97e2b73d2dd0d708f9996dbd73a90794d5f04ee6` (`fix(worker): correct shift timelines and exceptions`).
+- Review-fix implementation commit: `97e2b735469fb823c86acba41a05b2dbe03d7732` (`fix(worker): correct shift timelines and exceptions`).
 - PR: not created; the branch is ready for independent review through GitHub's [new pull request page](https://github.com/NguyenDucAnhTai/jobfree-zalo-miniapp/pull/new/feat/zmp-r5-worker-workflows).
