@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { employerProfileItems, employerServices } from '../../mocks/fixtures'
+import { ServiceArtwork } from '../../components/ServiceArtwork'
 import type { FormEvent } from 'react'
 import type { Destination, EmployerRequestDraft } from '../../types/domain'
 import { validateEmployerDraft } from './validateEmployerDraft'
@@ -11,9 +12,9 @@ export function EmployerServiceCatalog({ onChoose }: { onChoose: (serviceId: str
       <PageHeading eyebrow="DỊCH VỤ JOBFREE" title="Chọn dịch vụ" detail="Chọn nhu cầu phù hợp để bắt đầu tạo yêu cầu demo." />
       {categories.map((category, index) => <section className="catalog-group" key={category} aria-labelledby={`catalog-${index}`}>
         <h2 id={`catalog-${index}`}>{category}</h2>
-        <div className="catalog-list">{employerServices.filter((service) => service.category === category).map((service) => (
+        <div className="catalog-list employer-service-list">{employerServices.filter((service) => service.category === category).map((service) => (
           <button className="catalog-card" type="button" key={service.id} onClick={() => onChoose(service.id)}>
-            <span className={`service-icon service-icon-${service.id}`} aria-hidden="true">{service.icon}</span>
+            <ServiceArtwork service={service.id as 'moving' | 'cleaning' | 'delivery' | 'events'} label={`Minh họa dịch vụ ${service.title}`} className="catalog-art" />
             <span className="catalog-card-copy"><strong>{service.title}</strong><small>{service.description}</small><small className="catalog-price">{service.countLabel} · Giá tham khảo demo</small></span>
             <span className="catalog-arrow" aria-hidden="true">›</span>
           </button>
