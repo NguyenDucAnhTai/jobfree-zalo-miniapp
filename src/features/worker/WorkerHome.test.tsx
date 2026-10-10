@@ -5,13 +5,17 @@ import { initialWorkerShifts } from '../../mocks/workerLifecycleFixtures'
 import { getWorkerDashboardMetrics, workerDashboardSummaryFixture } from '../../mocks/workerDashboardFixtures'
 import { WorkerHome } from './WorkerHome'
 
+function shiftWithStatus(status: (typeof initialWorkerShifts)[number]['status']) {
+  return { ...initialWorkerShifts[0], status }
+}
+
 describe('Worker home reference implementation', () => {
   it('renders the Worker PNG reference structure and navigation CTA', () => {
     const onNavigate = vi.fn()
     render(<WorkerHome onNavigate={onNavigate} onSelectOpportunity={vi.fn()} />)
 
     expect(screen.getByRole('heading', { name: 'Tổng quan hôm nay' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Ca đang diễn ra' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ca sắp tới' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Điều khiển ca' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /khám phá việc mới/i })).toBeInTheDocument()
     expect(screen.getByText(`${workerHomeJobs.length} công việc trong dữ liệu demo`)).toBeInTheDocument()
@@ -74,6 +78,16 @@ describe('Worker home reference implementation', () => {
     expect(onOpenShift).toHaveBeenCalledWith(initialWorkerShifts[0].id)
   })
 
+  it.each([
+    ['scheduled', 'Ca sắp tới'],
+    ['en_route', 'Ca đang diễn ra'],
+    ['checked_in', 'Ca đang diễn ra'],
+    ['completed', 'Ca theo dõi'],
+  ] as const)('uses the appropriate heading for %s shifts', (status, heading) => {
+    render(<WorkerHome onNavigate={vi.fn()} onSelectOpportunity={vi.fn()} shift={shiftWithStatus(status)} />)
+    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
+  })
+
   it('shows an empty shift card when no suitable shift is supplied', () => {
     render(<WorkerHome onNavigate={vi.fn()} onSelectOpportunity={vi.fn()} />)
     expect(screen.getByRole('status')).toHaveTextContent('Chưa có ca sắp tới')
@@ -83,6 +97,13 @@ describe('Worker home reference implementation', () => {
     render(<WorkerHome onNavigate={vi.fn()} onSelectOpportunity={vi.fn()} />)
     for (const action of ['COD', 'Check-in', 'Dịch vụ', 'Báo cáo', 'Nghỉ']) {
       expect(screen.getByRole('button', { name: new RegExp(`${action}, chưa hỗ trợ trong demo`, 'i') })).toBeDisabled()
+    }
+  })
+
+  it('assigns distinct reference color tones to safe, disabled shift controls', () => {
+    render(<WorkerHome onNavigate={vi.fn()} onSelectOpportunity={vi.fn()} />)
+    for (const [label, tone] of [['COD', 'cod'], ['Check-in', 'checkin'], ['Dịch vụ', 'service'], ['Báo cáo', 'report'], ['Nghỉ', 'break']]) {
+      expect(screen.getByRole('button', { name: new RegExp(`${label}, chưa hỗ trợ trong demo`, 'i') })).toHaveClass(`worker-shift-control--${tone}`)
     }
   })
 })

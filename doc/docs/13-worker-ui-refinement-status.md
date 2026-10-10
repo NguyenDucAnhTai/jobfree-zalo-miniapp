@@ -1,12 +1,20 @@
 # Worker UI refinement status
 
+## Iteration 2 review refinement
+
+- The Product Owner confirmed the attached screenshot as the canonical reference. It is stored at `doc/design-reference/worker-dashboard/worker-home-target.png` and was inspected before visual changes.
+- Shift-control tiles now use the screenshot's distinct warm amber COD, green Check-in, blue-gray Service, coral Report and ochre Break palette. Controls remain disabled and display-only.
+- The shift section heading follows fixture status: `scheduled` → “Ca sắp tới”; `en_route` / `checked_in` → “Ca đang diễn ra”; no supplied shift → “Ca sắp tới”; other statuses → “Ca theo dõi”.
+- Regression tests cover each heading, the empty state and the five per-control color classes. The screenshot values were not copied; the dashboard fixture remains separate from lifecycle and wallet data.
+- Screenshot comparison can now use the saved confirmed target. Actual rendered viewport screenshots and responsive visual checks remain pending until captured; Zalo runtime remains unverified.
+
 ## Baseline and reference
 
 - Branch: `feat/zmp-r5-worker-ui-refinement`.
 - Base: approved R5 HEAD `366f8a658c5324d8747d1a79570138299211fc6f`; verified as an ancestor before branching.
 - Implementation source commit: `be0d8d65f163201d825acd103149a315a4e8ccfb`.
-- The Product Owner's newly supplied redesign screenshot was not present as an accessible image attachment or workspace file during implementation. The repository contains earlier static Worker PNG exports, including `doc/design-reference/worker-employer-wireframes/wireframes-complete-v4/Trang chủ JobFree.png`; this is not the new dashboard redesign and was inspected only as legacy context.
-- Implementation follows the written refinement specification. Do not claim visual fidelity to the unavailable new screenshot or pixel-perfect Figma matching until that reference is supplied and compared.
+- The Product Owner confirmed the newly supplied redesign image as the target; the image is saved at `doc/design-reference/worker-dashboard/worker-home-target.png`.
+- Iteration 0 followed the written refinement specification. Iteration 2 compared the reference image directly for the shift-control palette; full rendered screenshot comparison remains pending.
 
 ## Worker Home refinement
 
@@ -31,7 +39,7 @@
 
 ## Verification
 
-- Screenshot reference: `NOT ACCESSIBLE` for the new redesign screenshot; legacy PNG only.
+- Screenshot reference: `ACCESSIBLE` — `doc/design-reference/worker-dashboard/worker-home-target.png`; inspected for iteration 2 color/layout comparison.
 - Local browser: app opened at `http://localhost:5173/`; the initial visible screen was Employer. Exact Worker viewport screenshots at 402×874, 375×812 and 393×852 were not captured.
 - Worker visual 402×874: `NOT VERIFIED`.
 - Employer visual 393×852: `NOT VERIFIED`.
@@ -45,6 +53,6 @@
 
 ## Known limitations
 
-- DESIGN_APPROXIMATION: the requested new screenshot is unavailable in the accessible conversation/workspace, so source-specific comparison is pending.
+- DESIGN_APPROXIMATION: targeted comparison was made from the supplied PNG, but no actual rendered app screenshots were captured; exact visual alignment is not verified.
 - Dashboard is an explicitly isolated fixed demo scenario; it is not a wallet settlement, lifecycle assignment or real-time “today” feed.
 - No merge and no R6 work are included.

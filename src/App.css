@@ -378,9 +378,14 @@
 .worker-home-shift-empty strong { color: #4a4435; font-size: 12px; }.worker-home-shift-empty p { margin-top: 5px; color: #817b6d; font-size: 9px; }
 .worker-shift-controls { margin-top: 20px; padding: 15px; border: 1px solid #eee9df; border-radius: 22px; background: #fff; box-shadow: 0 6px 17px #29231809; }
 .worker-shift-control-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
-.worker-shift-control-grid button { min-width: 0; min-height: 67px; display: grid; align-content: center; justify-items: center; gap: 5px; padding: 5px 2px; border: 1px solid #efede8; border-radius: 13px; background: #faf9f6; color: #89857d; opacity: .82; }
-.worker-shift-control-grid button > span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 10px; background: #fff0b7; color: #826400; font-size: 13px; font-weight: 750; }
+.worker-shift-control-grid button { min-width: 0; min-height: 67px; display: grid; align-content: center; justify-items: center; gap: 5px; padding: 5px 2px; border: 1px solid var(--control-border); border-radius: 13px; background: var(--control-bg); color: var(--control-ink); }
+.worker-shift-control-grid button > span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid color-mix(in srgb, var(--control-ink) 24%, white); border-radius: 9px; background: var(--control-icon-bg); color: var(--control-ink); font-size: 13px; font-weight: 750; }
 .worker-shift-control-grid button strong { font-size: 8px; }
+.worker-shift-control--cod { --control-bg: #fff8e8; --control-border: #efc46b; --control-icon-bg: #fff0c8; --control-ink: #a66c00; }
+.worker-shift-control--checkin { --control-bg: #f1fbf5; --control-border: #b9e8cf; --control-icon-bg: #dff5e8; --control-ink: #218a55; }
+.worker-shift-control--service { --control-bg: #f5f7fa; --control-border: #d8e0e9; --control-icon-bg: #e8edf3; --control-ink: #68798d; }
+.worker-shift-control--report { --control-bg: #fff5f2; --control-border: #f5c2b7; --control-icon-bg: #ffebe6; --control-ink: #dd6653; }
+.worker-shift-control--break { --control-bg: #fff8e6; --control-border: #f0d68d; --control-icon-bg: #fff0be; --control-ink: #a77b08; }
 .worker-shift-controls-note { margin: 9px 1px 0; color: #8a857a; font-size: 8px; line-height: 1.45; }
 .worker-discovery-callout { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 13px; padding: 14px; border: 1px solid #eee4c5; border-radius: 19px; background: #fffdf6; }
 .worker-discovery-callout h2 { margin: 0; color: #393220; font-size: 15px; line-height: 1.25; }
