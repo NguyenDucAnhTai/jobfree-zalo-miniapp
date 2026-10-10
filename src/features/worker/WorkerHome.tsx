@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react'
 import { workerHomeJobs } from '../../mocks/fixtures'
 import type { Destination } from '../../types/domain'
+import type { WorkerProfileDemo } from '../../types/domain'
+import { workerProfileDemo } from '../../mocks/fixtures'
+import { workerScheduleKey } from '../../utils/workerDate'
 
 type JobFilter = 'Gần tôi' | 'Nhận ngay' | 'Lương cao' | 'Bắt đầu sớm'
 
-export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: (destination: Destination) => void; jobs?: typeof workerHomeJobs }) {
+export function WorkerHome({ onNavigate, onSelectOpportunity, onOpenNewOffer, jobs = workerHomeJobs, ready = true, profile = workerProfileDemo }: { onNavigate: (destination: Destination) => void; onSelectOpportunity: (id: string) => void; onOpenNewOffer?: () => void; jobs?: typeof workerHomeJobs; ready?: boolean; profile?: WorkerProfileDemo }) {
   const [filter, setFilter] = useState<JobFilter>('Gần tôi')
   const visibleJobs = useMemo(() => {
     if (filter === 'Nhận ngay') return jobs.filter((job) => job.tag === 'NHẬN NGAY')
     if (filter === 'Lương cao') return [...jobs].sort((a, b) => amountFromPay(b.pay) - amountFromPay(a.pay))
-    if (filter === 'Bắt đầu sớm') return [...jobs].sort((a, b) => dateKey(a.schedule).localeCompare(dateKey(b.schedule)))
+    if (filter === 'Bắt đầu sớm') return [...jobs].sort((a, b) => workerScheduleKey(a.schedule).localeCompare(workerScheduleKey(b.schedule)))
     return jobs.filter((job) => job.distanceLabel.includes('Gần') || job.distanceLabel.includes('km'))
   }, [filter, jobs])
 
@@ -18,8 +21,8 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
       <section className="worker-hero-card">
         <div className="worker-hero-copy">
           <h1 aria-label="Sẵn sàng nhận việc hôm nay">Sẵn sàng nhận việc<br aria-hidden="true" />hôm nay?</h1>
-          <p>Có 8 job phù hợp gần bạn</p>
-          <button className="worker-hero-button" type="button" onClick={() => onNavigate('jobs')}>
+          <p>{jobs.length ? `Có ${jobs.length} job phù hợp gần bạn` : 'Chưa có job phù hợp gần bạn'}</p>
+          <button className="worker-hero-button" type="button" onClick={() => onNavigate('opportunities')}>
             Xem job gần tôi <span aria-hidden="true">→</span>
           </button>
         </div>
@@ -27,9 +30,9 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
       </section>
 
       <section className="worker-stats" aria-label="Thông tin hồ sơ demo">
-        <div className="worker-stat"><span className="stat-symbol verified-symbol" aria-hidden="true">✦</span><strong>Đã xác thực</strong></div>
+        <div className="worker-stat"><span className="stat-symbol verified-symbol" aria-hidden="true">✦</span><strong>{profile.verificationStatus === 'verified' ? 'Đã xác thực' : 'Chưa xác thực'}</strong></div>
         <div className="worker-stat"><span className="stat-rating"><span aria-hidden="true">★</span> 4.8</span><strong>Rating</strong></div>
-        <div className="worker-stat"><span className="stat-symbol ready-symbol" aria-hidden="true">✓</span><strong>Sẵn sàng làm</strong></div>
+        <div className="worker-stat"><span className={`stat-symbol ready-symbol${ready ? '' : ' is-unavailable'}`} aria-hidden="true">{ready ? '✓' : 'Ⅱ'}</span><strong>{ready ? 'Sẵn sàng làm' : 'Đang tạm nghỉ'}</strong></div>
       </section>
 
       <section className="worker-job-section" aria-labelledby="worker-job-heading">
@@ -40,7 +43,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
         </div>
         <div className="worker-section-heading">
           <h2 id="worker-job-heading">Job phù hợp với bạn</h2>
-          <button className="worker-link-button" type="button" onClick={() => onNavigate('jobs')}>Xem tất cả</button>
+          <div className="worker-home-actions"><button className="worker-link-button" type="button" onClick={() => onNavigate('opportunities')}>Xem tất cả</button>{onOpenNewOffer && <button className="worker-link-button" type="button" onClick={onOpenNewOffer}>Việc mới</button>}</div>
         </div>
         <div className="worker-job-list" aria-live="polite">
           {visibleJobs.length ? visibleJobs.map((job) => (
@@ -55,7 +58,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
               </div>
               <div className="worker-job-meta"><span aria-hidden="true">◷</span>{job.schedule}</div>
               <div className="worker-job-meta"><span aria-hidden="true">⌖</span>{job.location}</div>
-              <button className="worker-detail-button" type="button" onClick={() => onNavigate('jobs')}>Xem chi tiết</button>
+              <button className="worker-detail-button" type="button" onClick={() => { onSelectOpportunity(job.id); onNavigate('opportunityDetail') }}>Xem chi tiết</button>
             </article>
           )) : (
             <div className="worker-empty-state" role="status">
@@ -71,9 +74,4 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs }: { onNavigate: 
 
 function amountFromPay(pay: string) {
   return Number(pay.replace(/\D/g, ''))
-}
-
-function dateKey(schedule: string) {
-  const [day, month, year] = schedule.split(' · ')[0].split('/')
-  return `${year}-${month}-${day}`
 }

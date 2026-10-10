@@ -44,6 +44,51 @@ describe('Employer request lifecycle demo', () => {
     expect(screen.getByText('Chưa có người làm')).toBeInTheDocument()
   })
 
+  it('keeps the saved summary consistent when edits are abandoned, then saves every revised field consistently', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo yêu cầu' }))
+    fireEvent.change(screen.getByLabelText('Dịch vụ'), { target: { value: 'moving' } })
+    fireEvent.change(screen.getByLabelText('Mô tả công việc'), { target: { value: 'Mô tả phiên bản đầu' } })
+    fireEvent.change(screen.getByLabelText('Địa điểm làm việc (dữ liệu demo)'), { target: { value: 'Quận 1' } })
+    fireEvent.click(screen.getByRole('button', { name: /lưu bản nháp demo/i }))
+
+    fireEvent.click(screen.getByRole('button', { name: /chỉnh sửa yêu cầu/i }))
+    fireEvent.change(screen.getByLabelText('Dịch vụ'), { target: { value: 'cleaning' } })
+    fireEvent.change(screen.getByLabelText('Mô tả công việc'), { target: { value: 'Mô tả phiên bản mới' } })
+    fireEvent.change(screen.getByLabelText('Địa điểm làm việc (dữ liệu demo)'), { target: { value: 'Quận 3' } })
+    fireEvent.change(screen.getByLabelText('Ngày làm'), { target: { value: '2026-10-12' } })
+    fireEvent.change(screen.getByLabelText('Bắt đầu'), { target: { value: '14:00' } })
+    fireEvent.change(screen.getByLabelText('Kết thúc'), { target: { value: '17:00' } })
+    fireEvent.click(screen.getByRole('button', { name: /tóm tắt yêu cầu/i }))
+
+    expect(screen.getByText('Bốc xếp')).toBeInTheDocument()
+    expect(screen.getByText('Mô tả phiên bản đầu')).toBeInTheDocument()
+    expect(screen.getByText('Quận 1 · địa điểm demo')).toBeInTheDocument()
+    expect(screen.getByText('10/10/2026 · 08:00–12:00')).toBeInTheDocument()
+    expect(screen.getByText('320.000 ₫')).toBeInTheDocument()
+    expect(screen.queryByText('Mô tả phiên bản mới')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /chỉnh sửa yêu cầu/i }))
+    fireEvent.click(screen.getByRole('button', { name: /lưu bản nháp demo/i }))
+    expect(screen.getByText('Dọn dẹp')).toBeInTheDocument()
+    expect(screen.getByText('Mô tả phiên bản mới')).toBeInTheDocument()
+    expect(screen.getByText('Quận 3 · địa điểm demo')).toBeInTheDocument()
+    expect(screen.getByText('12/10/2026 · 14:00–17:00')).toBeInTheDocument()
+    expect(screen.getByText('180.000 ₫')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /lưu và xem danh sách demo/i }))
+    const updatedCard = screen.getByRole('button', { name: /JF-DEMO-DRAFT-LOCAL/i })
+    expect(updatedCard).toHaveTextContent('Dọn dẹp')
+    expect(updatedCard).toHaveTextContent('Mô tả phiên bản mới')
+    expect(updatedCard).toHaveTextContent('Quận 3')
+    fireEvent.click(updatedCard)
+    expect(screen.getByRole('heading', { name: 'Dọn dẹp' })).toBeInTheDocument()
+    expect(screen.getByText('Mô tả phiên bản mới')).toBeInTheDocument()
+    expect(screen.getByText('Quận 3 · địa điểm demo')).toBeInTheDocument()
+    expect(screen.getByText('12/10/2026 · 14:00–17:00')).toBeInTheDocument()
+    expect(screen.getByText('180.000 ₫')).toBeInTheDocument()
+  })
+
   it('filters history by exact lifecycle status and opens a selected request', () => {
     const onOpen = vi.fn()
     render(<EmployerRequestHistory requests={employerRequestScenarios} onOpen={onOpen} />)
@@ -85,6 +130,18 @@ describe('Employer request lifecycle demo', () => {
     expect(screen.getByText(/Ca làm demo:/i)).toBeInTheDocument()
     fireEvent.change(screen.getByRole('combobox', { name: 'Chọn tình huống mẫu' }), { target: { value: 'JF-DEMO-0108' } })
     expect(props.onSelectScenario).toHaveBeenCalledWith('JF-DEMO-0108')
+  })
+
+  it('presents replacement matching with a clearly inactive old Worker and no replacement Worker', () => {
+    const replacement = employerRequestScenarios.find((request) => request.status === 'replacement_matching')!
+    render(<EmployerRequestDetail request={replacement} onBack={vi.fn()} onSelectScenario={vi.fn()} />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('Đang tìm người làm mới')
+    expect(screen.getByText('Worker cũ · assignment đã kết thúc')).toBeInTheDocument()
+    expect(screen.getByText('Đã thay thế')).toBeInTheDocument()
+    expect(screen.queryByText(/Đang phân công demo/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Ca làm demo:/)).not.toBeInTheDocument()
+    expect(screen.getAllByText(/Người làm demo An N\./)).toHaveLength(1)
   })
 
   it('renders all required fixed lifecycle states and never makes Worker nav expose Employer routes', () => {

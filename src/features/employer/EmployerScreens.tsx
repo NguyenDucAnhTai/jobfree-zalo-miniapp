@@ -51,14 +51,12 @@ const demoDate = '2026-10-09'
 
 export function EmployerRequestDraftScreen({
   draft,
-  saved,
   backDestination,
   onChange,
   onSave,
   onNavigate,
 }: {
   draft: EmployerRequestDraft
-  saved: boolean
   backDestination?: Destination
   onChange: (draft: EmployerRequestDraft) => void
   onSave: () => void
@@ -81,7 +79,6 @@ export function EmployerRequestDraftScreen({
         {backDestination === 'requestSummary' ? '← Tóm tắt yêu cầu' : '← Quay lại'}
       </button>
       <PageHeading eyebrow="BẢN NHÁP DEMO" title="Tạo yêu cầu" detail="Thông tin chỉ lưu trong trạng thái demo của phiên này." />
-      {saved && <div className="draft-saved-banner" role="status"><span aria-hidden="true">✓</span> Đã lưu bản nháp trên thiết bị này (demo)</div>}
       <form className="draft-form" onSubmit={save} noValidate>
         <label className="form-field"><span>Dịch vụ</span>
           <select value={draft.serviceId} onChange={(event) => update({ serviceId: event.target.value })} aria-invalid={submitted && Boolean(errors.serviceId)} aria-describedby={submitted ? 'service-error' : undefined}>

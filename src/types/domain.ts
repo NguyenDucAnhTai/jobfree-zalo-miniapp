@@ -13,6 +13,13 @@ export type Destination =
   | 'requestDraft'
   | 'requestSummary'
   | 'requestDetail'
+  | 'opportunities'
+  | 'opportunityDetail'
+  | 'shiftDetail'
+  | 'transactionDetail'
+  | 'skills'
+  | 'readiness'
+  | 'area'
 
 export type WorkRequestStatus =
   | 'draft'
@@ -120,3 +127,26 @@ export interface WorkerHomeJob extends JobPreview {
   distanceLabel: string
   category: string
 }
+
+export interface WorkerProfileDemo {
+  displayName: string
+  initials: string
+  rating: string
+  completedJobs: number
+  reliability: number
+  serviceArea: string
+  phoneLabel: string
+  verificationStatus: 'verified' | 'unverified'
+}
+
+export interface WorkerSkillDemo {
+  id: string
+  label: string
+  group: string
+}
+
+export interface WorkerOpportunity extends WorkerHomeJob {
+  durationHours: number
+}
+
+export type WorkerOpportunityFilter = 'Tất cả' | 'Gần tôi' | 'Nhận ngay' | 'Lương cao' | 'Bắt đầu sớm'

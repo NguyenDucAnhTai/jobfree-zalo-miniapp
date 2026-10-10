@@ -1,4 +1,4 @@
-import type { EmployerProfileItem, EmployerRequestDraft, JobPreview, ServiceSummary, ShiftPreview, WorkerHomeJob } from '../types/domain'
+import type { EmployerProfileItem, EmployerRequestDraft, JobPreview, ServiceSummary, ShiftPreview, WorkerHomeJob, WorkerOpportunity, WorkerProfileDemo, WorkerSkillDemo } from '../types/domain'
 
 export const employerServices: ServiceSummary[] = [
   { id: 'moving', category: 'Kho vận & Logistics', title: 'Bốc xếp', description: 'Hỗ trợ chuyển đồ, hàng hóa', icon: '↗', countLabel: 'Từ 80.000đ/giờ' },
@@ -75,3 +75,25 @@ export const workerHomeJobs: WorkerHomeJob[] = [
     category: 'warehouse',
   },
 ]
+
+export const workerProfileDemo: WorkerProfileDemo = {
+  displayName: 'Nguyễn Minh Nam', initials: 'N', rating: '4.8', completedJobs: 12, verificationStatus: 'unverified',
+  reliability: 92, serviceArea: 'Quận 1, TP. HCM', phoneLabel: 'Số điện thoại demo',
+}
+
+export const workerSkillOptions: WorkerSkillDemo[] = [
+  { id: 'moving', label: 'Bốc xếp, chuyển đồ', group: 'Kho vận & Logistics' },
+  { id: 'packing', label: 'Đóng gói hàng hóa', group: 'Kho vận & Logistics' },
+  { id: 'warehouse', label: 'Phân loại hàng', group: 'Kho vận & Logistics' },
+  { id: 'cleaning', label: 'Dọn dẹp nhà cửa', group: 'Nhà cửa & văn phòng' },
+  { id: 'event', label: 'Hỗ trợ sự kiện', group: 'Sự kiện' },
+  { id: 'delivery', label: 'Giao nhận', group: 'Giao nhận' },
+]
+
+export const workerSavedSkillIds = ['moving', 'packing']
+
+export const workerOpportunities: WorkerOpportunity[] = workerHomeJobs.map((job, index) => ({
+  ...job,
+  durationHours: 4,
+  distanceLabel: ['Gần bạn', '1,8 km', '3,2 km'][index] ?? job.distanceLabel,
+}))
