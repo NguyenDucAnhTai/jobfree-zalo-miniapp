@@ -233,6 +233,9 @@ describe('AppShell role context', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Gửi đánh giá demo' }))
     expect(screen.getByText(/JF-REVIEW-JF-DEMO-0107-JF-E1-ASSIGN-0107/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Gửi đánh giá demo' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Tài khoản' }))
+    fireEvent.click(screen.getByRole('button', { name: /đánh giá đã gửi/i }))
+    expect(screen.getByText(/JF-REVIEW-JF-DEMO-0107-JF-E1-ASSIGN-0107/)).toBeInTheDocument()
   }, 15000)
 
   it('submits a safe local incident and shows a submitted dispute case', () => {

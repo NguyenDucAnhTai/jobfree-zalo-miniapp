@@ -4,7 +4,7 @@ import { BottomNavigation } from '../components/BottomNavigation'
 import { RoleSwitcher } from '../components/RoleSwitcher'
 import { SharedHeader } from '../components/SharedHeader'
 import { EmployerHome } from '../features/employer/EmployerHome'
-import { EmployerProfile, EmployerRequestDraftScreen, EmployerServiceCatalog } from '../features/employer/EmployerScreens'
+import { EmployerRequestDraftScreen, EmployerServiceCatalog } from '../features/employer/EmployerScreens'
 import { EmployerRequestDetail, EmployerRequestHistory, EmployerRequestSummary } from '../features/employer/EmployerLifecycleScreens'
 import { WorkerHome } from '../features/worker/WorkerHome'
 import { WorkerNewJobModal } from '../features/worker/WorkerNewJobModal'
@@ -20,8 +20,12 @@ import { WorkerTransactionDetail, WorkerWallet } from '../features/worker/Worker
 import { ConversationScreen } from '../features/shared/ConversationScreen'
 import { DemoCallScreen } from '../features/shared/DemoCallScreen'
 import { EmployerE2Screen } from '../features/employer/EmployerE2Screens'
+import { EmployerAccountHome } from '../features/employer/EmployerAccountHome'
+import { EmployerAddresses, EmployerCaseDetail, EmployerCaseHistory, EmployerInfoScreen, EmployerNotifications, EmployerProfileEditor, EmployerRebook, EmployerReviewHistory, EmployerSupport } from '../features/employer/EmployerAccountScreens'
 import { demoConversationLinks, demoMessagesByConversation } from '../mocks/jobfreeCommunicationsFixtures'
 import { employerReviewFixtures } from '../mocks/employerCompletionFixtures'
+import { employerAddressFixtures, employerDefaultAddressFixtureId, employerNotificationFixtures, employerProfileFixture } from '../mocks/employerAccountFixtures'
+import { markEmployerNotificationRead, nextEmployerAddressState, unreadEmployerNotificationCount } from '../mocks/employerAccountAdapter'
 import { createCompletionDecision, submitEmployerIncident, submitEmployerReview } from '../mocks/employerCompletionAdapter'
 import { resolveDemoCommunicationAuthorization } from '../mocks/jobfreeCommunicationsAdapter'
 import type { EmployerCompletionDecision, EmployerDisputeCase, EmployerIncident, EmployerReview } from '../types/employerCompletion'
@@ -36,10 +40,15 @@ import { initialWorkerAssignments, initialWorkerShifts, workerOffers, workerWall
 import type { Destination, EmployerRequestDraft, EmployerWorkRequest, UiContext } from '../types/domain'
 import type { WorkerDecisionScenario, WorkerOfferStatus, WorkerShiftStatus } from '../types/workerLifecycle'
 import type { EmployerExtensionSessionState } from '../types/employerLifecycle'
+import type { EmployerDemoProfile, EmployerNotification, EmployerSavedAddress } from '../types/employerAccount'
+import { employerIncidentFixtures, employerDisputeFixtures } from '../mocks/employerCompletionFixtures'
 
 export function AppShell() {
   const [context, setContext] = useState<UiContext>('employer')
   const [destination, setDestination] = useState<Destination>('home')
+  const [draftBackDestination, setDraftBackDestination] = useState<Destination>('services')
+  const [employerUtilityBackDestination, setEmployerUtilityBackDestination] = useState<Destination>('account')
+  const [requestDetailBackDestination, setRequestDetailBackDestination] = useState<Destination>('history')
   const [employerDraft, setEmployerDraft] = useState<EmployerRequestDraft>(emptyEmployerRequestDraft)
   const [savedEmployerDraft, setSavedEmployerDraft] = useState<EmployerRequestDraft>()
   const [localDraftRequest, setLocalDraftRequest] = useState<EmployerWorkRequest>()
@@ -63,6 +72,13 @@ export function AppShell() {
   const [employerReviews, setEmployerReviews] = useState<EmployerReview[]>(employerReviewFixtures)
   const [employerIncidents, setEmployerIncidents] = useState<EmployerIncident[]>([])
   const [employerDisputes, setEmployerDisputes] = useState<EmployerDisputeCase[]>([])
+  const [employerProfile, setEmployerProfile] = useState<EmployerDemoProfile>(employerProfileFixture)
+  const [employerAddresses, setEmployerAddresses] = useState<EmployerSavedAddress[]>(employerAddressFixtures)
+  const [defaultEmployerAddressId, setDefaultEmployerAddressId] = useState<string | undefined>(employerDefaultAddressFixtureId)
+  const [addressSequence, setAddressSequence] = useState(employerAddressFixtures.length + 1)
+  const [employerNotifications, setEmployerNotifications] = useState<EmployerNotification[]>(employerNotificationFixtures)
+  const [selectedEmployerCaseId, setSelectedEmployerCaseId] = useState<string>()
+  const [notificationPreferences, setNotificationPreferences] = useState({ updates: true, reminders: true })
 
   function changeContext(nextContext: UiContext) {
     setContext(nextContext)
@@ -74,11 +90,14 @@ export function AppShell() {
 
   function navigate(nextDestination: Destination) {
     const isEmployerFlow = context === 'employer' && ['requestDraft', 'requestSummary', 'requestDetail'].includes(nextDestination)
+    if (context === 'employer' && nextDestination === 'requestDraft') setDraftBackDestination(destination === 'requestSummary' ? 'services' : destination)
+    if (context === 'employer' && nextDestination.startsWith('employer')) setEmployerUtilityBackDestination(destination)
     setDestination(isEmployerFlow || isDestinationForContext(context, nextDestination) ? nextDestination : 'home')
   }
 
   function chooseService(serviceId: string) {
     setEmployerDraft((current) => ({ ...current, serviceId }))
+    setDraftBackDestination('services')
     setDestination('requestDraft')
   }
 
@@ -94,7 +113,28 @@ export function AppShell() {
     setDestination('requestSummary')
   }
 
+  function rebookRequest(request: EmployerWorkRequest) {
+    setEmployerDraft({ serviceId: request.serviceId, details: request.details, location: request.location.replace(/ · địa điểm demo$/, ''), date: '', startTime: '', endTime: '' })
+    setSavedEmployerDraft(undefined)
+    setLocalDraftRequest(undefined)
+    setDraftBackDestination('employerRebook')
+    setDestination('requestDraft')
+  }
+
+  function saveEmployerAddress(address: EmployerSavedAddress) {
+    const saved = address.id ? address : { ...address, id: `JF-ADDR-${String(addressSequence).padStart(3, '0')}` }
+    if (!address.id) setAddressSequence((value) => value + 1)
+    const result = nextEmployerAddressState(employerAddresses, defaultEmployerAddressId, { type: 'save', address: saved })
+    setEmployerAddresses(result.addresses); setDefaultEmployerAddressId(result.defaultId)
+  }
+
+  function deleteEmployerAddress(id: string) {
+    const result = nextEmployerAddressState(employerAddresses, defaultEmployerAddressId, { type: 'delete', id })
+    setEmployerAddresses(result.addresses); setDefaultEmployerAddressId(result.defaultId)
+  }
+
   function openRequest(requestId: string) {
+    setRequestDetailBackDestination(destination === 'employerNotifications' || destination === 'employerRebook' || destination === 'home' ? destination : 'history')
     setSelectedRequestId(requestId)
     setDestination('requestDetail')
   }
@@ -167,7 +207,7 @@ export function AppShell() {
     if (nextStatus === 'completed') setWorkerAssignments((current) => current.map((assignment) => assignment.shiftId === updated.id ? { ...assignment, status: 'completed' } : assignment))
   }
 
-  const activeTab = destination === 'requestDraft' || destination === 'requestSummary' ? 'services' : destination === 'requestDetail' ? 'history' : destination === 'skills' || destination === 'readiness' ? 'account' : destination === 'opportunities' || destination === 'opportunityDetail' ? 'home' : destination === 'shiftDetail' ? 'jobs' : destination === 'transactionDetail' ? 'wallet' : destination
+  const activeTab = destination === 'requestDraft' || destination === 'requestSummary' ? 'services' : destination === 'requestDetail' ? 'history' : destination === 'skills' || destination === 'readiness' || destination.startsWith('employer') ? 'account' : destination === 'opportunities' || destination === 'opportunityDetail' ? 'home' : destination === 'shiftDetail' ? 'jobs' : destination === 'transactionDetail' ? 'wallet' : destination
   const isHome = destination === 'home'
   const isEmployerScreen = context === 'employer'
   const selectedRequest = getEmployerRequestById(selectedRequestId, localDraftRequest)
@@ -178,16 +218,34 @@ export function AppShell() {
   return (
     <div className={`app-shell context-${context}`} data-jobfree-context={context}>
       <div className="app-scroll-area">
-        <SharedHeader context={context} workerProfile={workerProfileDemo} workerReady={workerReady} onOpenNewOffer={context === 'worker' ? () => { setModalDecisionMessage(''); setNewJobModalOpen(true) } : undefined} />
+        <SharedHeader context={context} workerProfile={workerProfileDemo} workerReady={workerReady} employerDisplayName={employerProfile.displayName} employerUnreadCount={unreadEmployerNotificationCount(employerNotifications)} onOpenEmployerNotifications={() => navigate('employerNotifications')} onOpenNewOffer={context === 'worker' ? () => { setModalDecisionMessage(''); setNewJobModalOpen(true) } : undefined} />
         <RoleSwitcher key={context} context={context} onChange={changeContext} />
-        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} onSelectOpportunity={setSelectedOpportunityId} onOpenNewOffer={() => { setModalDecisionMessage(''); setNewJobModalOpen(true) }} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} shift={workerShifts.find((shift) => shift.status === 'checked_in') ?? workerShifts.find((shift) => shift.status === 'en_route') ?? workerShifts.find((shift) => shift.status === 'scheduled')} />) : isEmployerScreen && destination === 'services' ? (
+        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} onOpenRequest={openRequest} unreadCount={unreadEmployerNotificationCount(employerNotifications)} needsActionRequests={employerRequests.filter((r) => r.status === 'awaiting_employer_decision')} /> : <WorkerHome onNavigate={navigate} onSelectOpportunity={setSelectedOpportunityId} onOpenNewOffer={() => { setModalDecisionMessage(''); setNewJobModalOpen(true) }} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} shift={workerShifts.find((shift) => shift.status === 'checked_in') ?? workerShifts.find((shift) => shift.status === 'en_route') ?? workerShifts.find((shift) => shift.status === 'scheduled')} />) : isEmployerScreen && destination === 'services' ? (
           <EmployerServiceCatalog onChoose={chooseService} />
         ) : isEmployerScreen && destination === 'history' ? (
-          <EmployerRequestHistory requests={employerRequests} onOpen={openRequest} />
+          <EmployerRequestHistory requests={employerRequests} onOpen={openRequest} onRebook={rebookRequest} />
         ) : isEmployerScreen && destination === 'account' ? (
-          <EmployerProfile onNavigate={navigate} />
+          <EmployerAccountHome profile={employerProfile} unreadCount={unreadEmployerNotificationCount(employerNotifications)} onNavigate={navigate} />
+        ) : isEmployerScreen && destination === 'employerProfileEdit' ? (
+          <EmployerProfileEditor profile={employerProfile} onSave={(value) => { setEmployerProfile(value); setDestination('account') }} onBack={() => setDestination('account')} />
+        ) : isEmployerScreen && destination === 'employerAddresses' ? (
+          <EmployerAddresses addresses={employerAddresses} defaultId={defaultEmployerAddressId} onSave={saveEmployerAddress} onDelete={deleteEmployerAddress} onDefault={(id) => { const result = nextEmployerAddressState(employerAddresses, defaultEmployerAddressId, { type: 'default', id }); setDefaultEmployerAddressId(result.defaultId) }} onChoose={(address) => { setEmployerDraft((current) => ({ ...current, location: address.area })); setSavedEmployerDraft(undefined); setLocalDraftRequest(undefined); setDraftBackDestination('employerAddresses'); setDestination('requestDraft') }} onBack={() => setDestination('account')} />
+        ) : isEmployerScreen && destination === 'employerRebook' ? (
+          <EmployerRebook requests={employerRequests} onRebook={rebookRequest} onOpen={openRequest} onBack={() => setDestination('account')} />
+        ) : isEmployerScreen && destination === 'employerNotifications' ? (
+          <EmployerNotifications items={employerNotifications} onRead={(id) => setEmployerNotifications((current) => markEmployerNotificationRead(current, id))} onReadAll={() => setEmployerNotifications((current) => current.map((item) => ({ ...item, read: true })))} onOpenRequest={(id) => { if (getEmployerRequestById(id, localDraftRequest)) openRequest(id) }} onBack={() => setDestination(employerUtilityBackDestination)} />
+        ) : isEmployerScreen && destination === 'employerReviews' ? (
+          <EmployerReviewHistory reviews={employerReviews} requests={employerRequests} onBack={() => setDestination('account')} />
+        ) : isEmployerScreen && destination === 'employerCases' ? (
+          <EmployerCaseHistory incidents={[...employerIncidentFixtures, ...employerIncidents]} disputes={[...employerDisputeFixtures, ...employerDisputes]} requests={employerRequests} onOpen={(id) => { setSelectedEmployerCaseId(id); setDestination('employerCaseDetail') }} onBack={() => setDestination('account')} />
+        ) : isEmployerScreen && destination === 'employerCaseDetail' ? (
+          <EmployerCaseDetail caseId={selectedEmployerCaseId} incidents={[...employerIncidentFixtures, ...employerIncidents]} disputes={[...employerDisputeFixtures, ...employerDisputes]} onBack={() => setDestination('employerCases')} />
+        ) : isEmployerScreen && destination === 'employerSupport' ? (
+          <EmployerSupport onNavigate={navigate} onBack={() => setDestination(employerUtilityBackDestination)} />
+        ) : isEmployerScreen && ['employerPaymentsInfo', 'employerPrivacy', 'employerTerms', 'employerAppInfo', 'employerNotificationSettings'].includes(destination) ? (
+          <EmployerInfoScreen destination={destination} onBack={() => setDestination(employerUtilityBackDestination)} preferences={notificationPreferences} onPreference={(key, value) => setNotificationPreferences((current) => ({ ...current, [key]: value }))} />
         ) : isEmployerScreen && destination === 'requestDraft' ? (
-          <EmployerRequestDraftScreen draft={employerDraft} backDestination={localDraftRequest ? 'requestSummary' : 'services'} onChange={updateEmployerDraft} onSave={saveEmployerDraft} onNavigate={navigate} />
+          <EmployerRequestDraftScreen draft={employerDraft} backDestination={localDraftRequest ? 'requestSummary' : draftBackDestination} onChange={updateEmployerDraft} onSave={saveEmployerDraft} onNavigate={navigate} />
         ) : isEmployerScreen && destination === 'requestSummary' && localDraftRequest ? (
           <EmployerRequestSummary request={localDraftRequest} draft={savedEmployerDraft ?? employerDraft} onEdit={() => setDestination('requestDraft')} onHistory={() => setDestination('history')} />
         ) : isEmployerScreen && destination === 'requestDetail' && selectedRequest ? (
@@ -200,7 +258,7 @@ export function AppShell() {
                 setEmployerExtensionSessions((current) => ({ ...current, [selectedExtensionScope]: nextState }))
               }
             }}
-            onBack={() => setDestination('history')}
+            onBack={() => setDestination(requestDetailBackDestination)}
             onSelectScenario={selectRequestScenario}
             onOpenChat={() => { const link = demoConversationLinks.find((item) => item.role === 'employer' && item.requestId === selectedRequest.id && item.assignmentStatus === 'active'); if (link) openConversation(link, 'communicationChat') }}
             onOpenCall={() => { const link = demoConversationLinks.find((item) => item.role === 'employer' && item.requestId === selectedRequest.id && item.assignmentStatus === 'active'); if (link) openConversation(link, 'communicationCall') }}
@@ -208,6 +266,7 @@ export function AppShell() {
             onOpenReview={() => setDestination('review')}
             onOpenIncident={() => setDestination('incident')}
             onOpenDispute={() => setDestination('dispute')}
+            onRebook={rebookRequest}
           />
         ) : !isEmployerScreen && destination === 'account' ? (
           <WorkerProfile profile={workerProfileDemo} skillCount={workerSkillIds.length} onNavigate={navigate} />
@@ -234,7 +293,7 @@ export function AppShell() {
         ) : destination === 'communicationCall' ? (
           <DemoCallScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} onBack={() => setDestination(communicationBackDestination)} authorize={() => selectedConversation ? resolveSelectedCommunication(selectedConversation, 'call') : { allowed: false, readOnly: false, currentAssignmentStatus: 'none', reason: 'Không có assignment hợp lệ.' }} />
         ) : isEmployerScreen && ['completion', 'review', 'incident', 'dispute'].includes(destination) ? (
-          <EmployerE2Screen screen={destination as 'completion' | 'review' | 'incident' | 'dispute'} request={selectedRequest} completion={selectedCompletion} onCompletion={(value) => { const decision = createCompletionDecision(value.requestId, value.assignmentId, value.shiftId, value.status as 'confirmed_demo' | 'issue_reported_demo', completionDecisions[value.requestId]); if (decision) setCompletionDecisions((current) => ({ ...current, [decision.requestId]: decision })) }} reviews={employerReviews} onReview={(value) => { const review = submitEmployerReview(value, employerReviews); if (review) setEmployerReviews((current) => current.some((item) => item.requestId === review.requestId && item.assignmentId === review.assignmentId) ? current : [...current, review]) }} incidents={employerIncidents} onIncident={(incident) => { const result = submitEmployerIncident({ requestId: incident.requestId, assignmentId: incident.assignmentId, category: incident.category, description: incident.description, evidenceLabel: incident.evidenceLabel }, employerIncidents, employerDisputes); setEmployerIncidents((current) => current.some((item) => item.id === result.incident.id) ? current : [...current, result.incident]); setEmployerDisputes((current) => current.some((item) => item.id === result.dispute.id) ? current : [...current, result.dispute]); setDestination('dispute') }} disputes={employerDisputes} onDispute={(value) => setEmployerDisputes((current) => current.some((item) => item.id === value.id) ? current.map((item) => item.id === value.id ? value : item) : [...current, value])} onBack={() => setDestination('requestDetail')} onOpenReview={() => setDestination('review')} />
+          <EmployerE2Screen screen={destination as 'completion' | 'review' | 'incident' | 'dispute'} request={selectedRequest} completion={selectedCompletion} onCompletion={(value) => { const decision = createCompletionDecision(value.requestId, value.assignmentId, value.shiftId, value.status as 'confirmed_demo' | 'issue_reported_demo', completionDecisions[value.requestId]); if (decision) setCompletionDecisions((current) => ({ ...current, [decision.requestId]: decision })) }} reviews={employerReviews} onReview={(value) => { const review = submitEmployerReview(value, employerReviews); if (review) setEmployerReviews((current) => current.some((item) => item.requestId === review.requestId && item.assignmentId === review.assignmentId) ? current : [...current, review]) }} incidents={employerIncidents} onIncident={(incident) => { const result = submitEmployerIncident({ requestId: incident.requestId, assignmentId: incident.assignmentId, category: incident.category, description: incident.description, evidenceLabel: incident.evidenceLabel }, [...employerIncidentFixtures, ...employerIncidents], [...employerDisputeFixtures, ...employerDisputes]); setEmployerIncidents((current) => current.some((item) => item.id === result.incident.id) ? current : [...current, result.incident]); setEmployerDisputes((current) => current.some((item) => item.id === result.dispute.id) ? current : [...current, result.dispute]); setDestination('dispute') }} disputes={employerDisputes} onDispute={(value) => setEmployerDisputes((current) => current.some((item) => item.id === value.id) ? current.map((item) => item.id === value.id ? value : item) : [...current, value])} onBack={() => setDestination('requestDetail')} onOpenReview={() => setDestination('review')} />
         ) : (
           <main className="placeholder-content">
             <span className="placeholder-icon" aria-hidden="true">{['services', 'jobs', 'schedule', 'wallet'].includes(destination) ? '▦' : '⌂'}</span>

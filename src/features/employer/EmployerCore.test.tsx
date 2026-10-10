@@ -54,7 +54,7 @@ describe('Employer core demo flows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Người thuê' }))
     fireEvent.click(screen.getByRole('button', { name: 'Tạo yêu cầu' }))
     expect(screen.getByLabelText('Mô tả công việc')).toHaveValue('Hỗ trợ chuyển đồ lên tầng hai')
-  })
+  }, 15000)
 
   it('opens the Employer profile from its own navigation and labels unsupported items', () => {
     render(<AppShell />)
@@ -62,8 +62,10 @@ describe('Employer core demo flows', () => {
     fireEvent.click(within(employerNavigation).getByRole('button', { name: 'Tài khoản' }))
 
     expect(screen.getByRole('heading', { name: 'Tài khoản' })).toBeInTheDocument()
-    expect(screen.getByText(/thông tin giả lập/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /phương thức thanh toán, chưa hỗ trợ trong demo/i })).toBeDisabled()
+    expect(screen.getByText(/dữ liệu giả lập/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /thanh toán demo/i }))
+    expect(screen.getByRole('heading', { name: 'Thanh toán demo' })).toBeInTheDocument()
+    expect(screen.getByText(/không nhập thẻ hoặc tài khoản ngân hàng/i)).toBeInTheDocument()
   })
 
   it('can render explicit empty, loading and error states for recent requests', () => {

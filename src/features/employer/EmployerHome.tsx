@@ -4,14 +4,17 @@ import { NavigationIcon } from '../../components/NavigationIcon'
 import { ServiceArtwork } from '../../components/ServiceArtwork'
 import { employerJobs, employerServices } from '../../mocks/fixtures'
 import { employerQuickUtilities } from '../../mocks/employerHomeFixtures'
-import type { AsyncState, Destination, JobPreview } from '../../types/domain'
+import type { AsyncState, Destination, JobPreview, EmployerWorkRequest } from '../../types/domain'
 import { EmployerHomeCarousel } from './EmployerHomeCarousel'
 
-export function EmployerHome({ onNavigate, onSelectService, homeState = 'success', jobs = employerJobs }: {
+export function EmployerHome({ onNavigate, onSelectService, onOpenRequest, homeState = 'success', jobs = employerJobs, unreadCount = 0, needsActionRequests = [] }: {
   onNavigate: (destination: Destination) => void
   onSelectService: (serviceId: string) => void
   homeState?: AsyncState
   jobs?: JobPreview[]
+  unreadCount?: number
+  needsActionRequests?: EmployerWorkRequest[]
+  onOpenRequest?: (id: string) => void
 }) {
   const [guideOpen, setGuideOpen] = useState(false)
   return (
@@ -42,6 +45,13 @@ export function EmployerHome({ onNavigate, onSelectService, homeState = 'success
           </button>
         </div>
       </section>
+
+      <section className="employer-utilities e3-home-quick" aria-label="Lối tắt dịch vụ"><div className="employer-utility-grid">
+        <button className="employer-utility-card" onClick={() => onNavigate('employerNotifications')}><span className="employer-utility-icon"><NavigationIcon name="account" /></span><span><strong>Thông báo</strong><small>{unreadCount} mục chưa đọc · DEMO</small></span><b>›</b></button>
+        <button className="employer-utility-card" onClick={() => onNavigate('employerRebook')}><span className="employer-utility-icon">↻</span><span><strong>Đặt lại dịch vụ</strong><small>Tạo bản nháp từ yêu cầu cũ</small></span><b>›</b></button>
+        <button className="employer-utility-card" onClick={() => onNavigate('employerSupport')}><span className="employer-utility-icon">?</span><span><strong>Trợ giúp</strong><small>Xem hướng dẫn sử dụng</small></span><b>›</b></button>
+      </div></section>
+      {needsActionRequests.length > 0 && <section className="section-block e3-home-actions"><div className="section-heading"><div><span className="section-kicker">TỪ YÊU CẦU DEMO</span><h2>Cần bạn xử lý</h2></div></div>{needsActionRequests.map((request) => <button className="e3-card e3-home-action" key={request.id} onClick={() => onOpenRequest ? onOpenRequest(request.id) : onNavigate('history')}><strong>{request.serviceLabel} · {request.id}</strong><span>Chờ xác nhận hoàn tất · DEMO</span><b>›</b></button>)}</section>}
 
       <section className="section-block jobs-section" aria-labelledby="employer-jobs-title">
         <div className="section-heading"><div><span className="section-kicker">CẬP NHẬT GẦN ĐÂY</span><h2 id="employer-jobs-title">Công việc của bạn</h2></div><button className="text-button" type="button" onClick={() => onNavigate('history')}>Lịch sử <span aria-hidden="true">→</span></button></div>
