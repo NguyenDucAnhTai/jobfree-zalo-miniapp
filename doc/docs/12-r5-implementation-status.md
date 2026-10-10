@@ -40,4 +40,6 @@
 ## Delivery
 
 - Review request: `JOBFREE-ZMP-R5`.
-- PR: not created; branch push status and commit are recorded in the delivery report after publication.
+- Commit: `37296e3` (`feat(worker): implement R5 work workflows`).
+- Remote: pushed to `origin/feat/zmp-r5-worker-workflows`.
+- PR: not created; the branch is ready for independent review through GitHub's [new pull request page](https://github.com/NguyenDucAnhTai/jobfree-zalo-miniapp/pull/new/feat/zmp-r5-worker-workflows).
