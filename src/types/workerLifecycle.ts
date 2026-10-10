@@ -2,7 +2,14 @@ export type WorkerOfferStatus = 'offered' | 'accepted' | 'declined' | 'expired' 
 export type WorkerDecisionScenario = 'success' | 'expired' | 'taken' | 'withdrawn' | 'superseded' | 'invalid'
 export type WorkerAssignmentStatus = 'active' | 'completed' | 'cancelled'
 export type WorkerShiftStatus = 'scheduled' | 'en_route' | 'checked_in' | 'pending_confirmation' | 'completed' | 'no_show' | 'incident_pending' | 'cancelled'
+export type WorkerShiftEventStatus = Exclude<WorkerShiftStatus, 'scheduled'>
 export type WorkerJobGroup = 'upcoming' | 'in_progress' | 'pending_confirmation' | 'completed' | 'history'
+
+export interface WorkerShiftTimelineEvent {
+  status: WorkerShiftEventStatus
+  label: string
+  occurredAt: string
+}
 
 export interface WorkerOffer {
   id: string
@@ -39,10 +46,13 @@ export interface WorkerShift {
   description: string
   dateKey: string
   schedule: string
+  scheduledStartAt: string
+  scheduledEndAt: string
+  displayOnly?: boolean
   location: string
   pay: number
   status: WorkerShiftStatus
-  timeline: { status: WorkerShiftStatus; label: string; time: string }[]
+  timeline: WorkerShiftTimelineEvent[]
 }
 
 export interface WorkerJob {
@@ -53,6 +63,8 @@ export interface WorkerJob {
   schedule: string
   pay: number
   group: WorkerJobGroup
+  status: WorkerShiftStatus
+  timeline: WorkerShiftTimelineEvent[]
   shiftId?: string
   employerName: string
   assignmentId?: string

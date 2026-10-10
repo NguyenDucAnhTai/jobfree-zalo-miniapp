@@ -1,5 +1,6 @@
 import { offerOutcomeMessages } from './workerLifecycleFixtures'
 import type { WorkerAssignment, WorkerDecisionScenario, WorkerJob, WorkerOffer, WorkerShift, WorkerShiftStatus, WorkerTransaction } from '../types/workerLifecycle'
+import { createShiftTimeline, shiftEventTime, shiftWindow } from '../utils/workerShiftTimeline'
 
 export type WorkerOfferDecisionResult = {
   offerStatus: WorkerOffer['status']
@@ -26,10 +27,12 @@ export function decideWorkerOffer(offer: WorkerOffer, decision: 'accept' | 'decl
   const jobId = `demo-worker-job-accepted-${offer.id}`
   const shiftId = `demo-shift-accepted-${offer.id}`
   const assignment: WorkerAssignment = { id: `demo-assignment-${offer.id}`, offerId: offer.id, jobId, shiftId, status: 'active' }
+  const schedule = `${offer.startTime} – ${offer.endTime}`
+  const { start, end } = shiftWindow(offer.dateKey, schedule)
   const shift: WorkerShift = {
     id: shiftId, jobId, title: offer.title, description: offer.description, dateKey: offer.dateKey,
-    schedule: `${offer.startTime} – ${offer.endTime}`, location: offer.location, pay: offer.totalPay,
-    status: 'scheduled', timeline: [{ status: 'scheduled', label: 'Ca đã lên lịch từ fixture demo', time: offer.startTime }],
+    schedule, scheduledStartAt: start, scheduledEndAt: end, location: offer.location, pay: offer.totalPay,
+    status: 'scheduled', timeline: createShiftTimeline(offer.dateKey, schedule, 'scheduled'),
   }
   return { offerStatus: 'accepted', result: 'accepted', message: offerOutcomeMessages.success, assignment, shift }
 }
@@ -38,14 +41,13 @@ const validShiftTransitions: Partial<Record<WorkerShiftStatus, WorkerShiftStatus
   scheduled: 'en_route', en_route: 'checked_in', checked_in: 'pending_confirmation', pending_confirmation: 'completed',
 }
 
-const transitionLabels: Partial<Record<WorkerShiftStatus, string>> = {
-  en_route: 'Bắt đầu di chuyển · demo', checked_in: 'Check-in demo', pending_confirmation: 'Chờ xác nhận · demo', completed: 'Hoàn tất demo',
-}
-
 export function transitionWorkerShift(shift: WorkerShift, nextStatus: WorkerShiftStatus): WorkerShift | null {
+  if (shift.displayOnly) return null
   if (validShiftTransitions[shift.status] !== nextStatus) return null
-  const time = transitionTime(shift, nextStatus)
-  return { ...shift, status: nextStatus, timeline: [...shift.timeline, { status: nextStatus, label: transitionLabels[nextStatus] ?? nextStatus, time }] }
+  const eventTime = shiftEventTime(shift.dateKey, shift.schedule, nextStatus as Exclude<WorkerShiftStatus, 'scheduled'>)
+  const timeline = createShiftTimeline(shift.dateKey, shift.schedule, nextStatus)
+  const event = timeline[timeline.length - 1]
+  return { ...shift, status: nextStatus, timeline: [...shift.timeline, { ...event, occurredAt: eventTime }] }
 }
 
 export function getWorkerJobs(assignments: WorkerAssignment[], shifts: WorkerShift[]): WorkerJob[] {
@@ -57,7 +59,7 @@ export function getWorkerJobs(assignments: WorkerAssignment[], shifts: WorkerShi
     const assignment = assignments.find((item) => item.shiftId === shift.id)
     return {
       id: shift.jobId, title: shift.title, location: shift.location, dateKey: shift.dateKey, schedule: shift.schedule,
-      pay: shift.pay, group: statusToGroup[shift.status], shiftId: shift.id,
+      pay: shift.pay, group: statusToGroup[shift.status], status: shift.status, timeline: shift.timeline, shiftId: shift.id,
       employerName: shift.id.endsWith('001') ? 'Hộ kinh doanh Linh Trung' : shift.id.endsWith('002') ? 'Shop Thời Trang Mia' : 'Đối tác demo',
       ...(assignment ? { assignmentId: assignment.id } : {}),
     }
@@ -84,13 +86,4 @@ export function formatVnd(amount: number) { return `${new Intl.NumberFormat('vi-
 function formatDate(dateKey: string) {
   const [year, month, day] = dateKey.split('-')
   return `${day}/${month}/${year}`
-}
-
-function transitionTime(shift: WorkerShift, nextStatus: WorkerShiftStatus) {
-  const [start, end] = shift.schedule.split(' – ')
-  const source = nextStatus === 'en_route' ? start : nextStatus === 'checked_in' ? start : end
-  const offset = nextStatus === 'en_route' ? -45 : nextStatus === 'checked_in' ? -15 : nextStatus === 'completed' ? 10 : 0
-  const [hour, minute] = source.split(':').map(Number)
-  const total = (hour * 60 + minute + offset + 1440) % 1440
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }

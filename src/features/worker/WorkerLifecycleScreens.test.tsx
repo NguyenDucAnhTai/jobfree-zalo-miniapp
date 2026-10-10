@@ -9,6 +9,7 @@ import { WorkerWallet } from './WorkerWallet'
 import { getWorkerJobs, getWorkerTransactions, getWorkerWalletSummary } from '../../mocks/workerLifecycleAdapter'
 import { decideWorkerOffer } from '../../mocks/workerLifecycleAdapter'
 import { initialWorkerAssignments, initialWorkerShifts, workerOffers, workerWalletTransactions } from '../../mocks/workerLifecycleFixtures'
+import { formatShiftEventTime } from '../../utils/workerShiftTimeline'
 
 describe('Worker lifecycle screens', () => {
   it('shows offer detail for the selected offer and exposes a stale outcome', () => {
@@ -33,11 +34,68 @@ describe('Worker lifecycle screens', () => {
     const jobs = getWorkerJobs(initialWorkerAssignments, initialWorkerShifts)
     const onOpenShift = vi.fn()
     render(<WorkerJobs jobs={jobs} onOpenShift={onOpenShift} />)
-    expect(screen.getAllByRole('article')).toHaveLength(3)
+    expect(screen.getAllByRole('article')).toHaveLength(6)
     fireEvent.click(screen.getByRole('button', { name: 'Chờ xác nhận' }))
     expect(screen.getAllByRole('article')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Xem chi tiết ca' }))
     expect(onOpenShift).toHaveBeenCalledWith('demo-shift-002')
+  })
+
+  it.each([
+    ['no_show', 'Không tham gia · demo fixture', 'Không tham gia · demo fixture', '2026-10-09'],
+    ['incident_pending', 'Chờ xử lý sự cố · demo fixture', 'Ghi nhận sự cố · demo fixture', '2026-10-12'],
+    ['cancelled', 'Đã hủy · demo fixture', 'Ca đã hủy · demo fixture', '2026-10-13'],
+  ] as const)('presents %s as a read-only fixture in My Jobs, Schedule and Shift Detail', (status, listLabel, eventLabel, day) => {
+    const shift = initialWorkerShifts.find((item) => item.status === status)!
+    const onOpenShift = vi.fn()
+    const { unmount } = render(<WorkerJobs jobs={getWorkerJobs(initialWorkerAssignments, initialWorkerShifts)} onOpenShift={onOpenShift} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Lịch sử' }))
+    const article = screen.getByText(shift.title).closest('article')!
+    expect(within(article).getAllByText(listLabel).length).toBeGreaterThan(0)
+    const jobTimeline = within(article).getByRole('list', { name: `Tiến trình demo ${shift.title}` })
+    expect(within(jobTimeline).getByText(eventLabel)).toBeInTheDocument()
+    expect(within(jobTimeline).getByText(formatShiftEventTime(shift.timeline[shift.timeline.length - 1].occurredAt))).toBeInTheDocument()
+    fireEvent.click(within(article).getByRole('button', { name: 'Xem chi tiết ca' }))
+    expect(onOpenShift).toHaveBeenCalledWith(shift.id)
+    unmount()
+
+    render(<WorkerSchedule shifts={initialWorkerShifts} onOpenShift={onOpenShift} />)
+    const dateButton = screen.getByText(String(Number(day.slice(-2)))).closest('button')!
+    fireEvent.click(dateButton)
+    const scheduledCard = screen.getByRole('button', { name: new RegExp(shift.title) })
+    expect(within(scheduledCard).getByText(listLabel)).toBeInTheDocument()
+    fireEvent.click(scheduledCard)
+    expect(onOpenShift).toHaveBeenLastCalledWith(shift.id)
+    unmount()
+
+    const onTransition = vi.fn()
+    render(<WorkerShiftDetail shift={shift} onBack={vi.fn()} onTransition={onTransition} />)
+    expect(screen.getAllByText(listLabel).length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText(eventLabel).length).toBeGreaterThan(0)
+    expect(screen.getByText(/chỉ đọc/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /mô phỏng|hoàn tất ca/i })).not.toBeInTheDocument()
+    expect(onTransition).not.toHaveBeenCalled()
+  })
+
+  it('shows planned shift hours separately from full lifecycle event timestamps', () => {
+    const shift = initialWorkerShifts[0]
+    const transitioned = { ...shift, status: 'completed' as const, timeline: [
+      { status: 'en_route' as const, label: 'Bắt đầu di chuyển · demo', occurredAt: '2026-10-10T17:15:00' },
+      { status: 'checked_in' as const, label: 'Check-in demo', occurredAt: '2026-10-10T18:00:00' },
+      { status: 'pending_confirmation' as const, label: 'Chờ xác nhận · demo', occurredAt: '2026-10-10T22:00:00' },
+      { status: 'completed' as const, label: 'Hoàn tất demo', occurredAt: '2026-10-10T22:10:00' },
+    ] }
+    render(<WorkerShiftDetail shift={transitioned} onBack={vi.fn()} onTransition={vi.fn()} />)
+    expect(screen.getByText('18:00 – 22:00')).toBeInTheDocument()
+    expect(screen.getByText('10/10/2026 · 17:15')).toBeInTheDocument()
+    expect(screen.getByText('10/10/2026 · 22:10')).toBeInTheDocument()
+  })
+
+  it('does not offer a transition from a completed shift', () => {
+    const completed = initialWorkerShifts.find((shift) => shift.status === 'completed')!
+    render(<WorkerShiftDetail shift={completed} onBack={vi.fn()} onTransition={vi.fn()} />)
+    expect(screen.getAllByText('Đã hoàn thành · demo').length).toBeGreaterThan(0)
+    expect(screen.queryByRole('button', { name: /mô phỏng|hoàn tất ca/i })).not.toBeInTheDocument()
   })
 
   it('shows the same selected date shift on Schedule and Shift Detail', () => {

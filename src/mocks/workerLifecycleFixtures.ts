@@ -1,5 +1,6 @@
 import { workerOpportunities } from './fixtures'
 import type { WorkerAssignment, WorkerDecisionScenario, WorkerOffer, WorkerShift, WorkerTransaction } from '../types/workerLifecycle'
+import { createShiftTimeline, shiftWindow } from '../utils/workerShiftTimeline'
 
 export const workerOffers: WorkerOffer[] = workerOpportunities.map((job, index) => ({
   id: `demo-offer-${String(index + 1).padStart(3, '0')}`,
@@ -41,9 +42,12 @@ export const initialWorkerAssignments: WorkerAssignment[] = [
 ]
 
 export const initialWorkerShifts: WorkerShift[] = [
-  { id: 'demo-shift-001', jobId: 'demo-worker-job-001', title: 'Phụ chuyển vật dụng', description: 'Hỗ trợ bốc xếp và sắp xếp vật dụng theo mô tả minh họa.', dateKey: '2026-10-10', schedule: '18:00 – 22:00', location: '12 Nguyễn Văn Linh, Quận 1, TP. HCM', pay: 280000, status: 'scheduled', timeline: [{ status: 'scheduled', label: 'Ca đã lên lịch', time: '18:00' }] },
-  { id: 'demo-shift-002', jobId: 'demo-worker-job-002', title: 'Đóng gói đơn livestream', description: 'Đóng gói theo danh sách đơn hàng demo.', dateKey: '2026-10-11', schedule: '08:00 – 12:00', location: 'Shop Thời Trang Mia, Quận 3, TP. HCM', pay: 240000, status: 'pending_confirmation', timeline: [{ status: 'scheduled', label: 'Ca đã lên lịch', time: '08:00' }, { status: 'pending_confirmation', label: 'Chờ xác nhận', time: '12:00' }] },
-  { id: 'demo-shift-003', jobId: 'demo-worker-job-003', title: 'Đóng gói đơn', description: 'Đóng gói đơn hàng trong ca demo đã hoàn tất.', dateKey: '2026-10-08', schedule: '08:00 – 12:00', location: 'Shop Thời Trang Mia, Quận 3, TP. HCM', pay: 220000, status: 'completed', timeline: [{ status: 'scheduled', label: 'Ca đã lên lịch', time: '08:00' }, { status: 'completed', label: 'Hoàn tất demo', time: '12:00' }] },
+  fixtureShift({ id: 'demo-shift-001', jobId: 'demo-worker-job-001', title: 'Phụ chuyển vật dụng', description: 'Hỗ trợ bốc xếp và sắp xếp vật dụng theo mô tả minh họa.', dateKey: '2026-10-10', schedule: '18:00 – 22:00', location: '12 Nguyễn Văn Linh, Quận 1, TP. HCM', pay: 280000, status: 'scheduled' }),
+  fixtureShift({ id: 'demo-shift-002', jobId: 'demo-worker-job-002', title: 'Đóng gói đơn livestream', description: 'Đóng gói theo danh sách đơn hàng demo.', dateKey: '2026-10-11', schedule: '08:00 – 12:00', location: 'Shop Thời Trang Mia, Quận 3, TP. HCM', pay: 240000, status: 'pending_confirmation' }),
+  fixtureShift({ id: 'demo-shift-003', jobId: 'demo-worker-job-003', title: 'Đóng gói đơn', description: 'Đóng gói đơn hàng trong ca demo đã hoàn tất.', dateKey: '2026-10-08', schedule: '08:00 – 12:00', location: 'Shop Thời Trang Mia, Quận 3, TP. HCM', pay: 220000, status: 'completed' }),
+  fixtureShift({ id: 'demo-shift-no-show-001', jobId: 'demo-worker-job-no-show-001', title: 'Hỗ trợ kiểm kê buổi sáng', description: 'Kịch bản không tham gia chỉ được cung cấp bởi fixture minh họa.', dateKey: '2026-10-09', schedule: '10:00 – 14:00', location: 'Kho demo Bình Thạnh, TP. HCM', pay: 250000, status: 'no_show', displayOnly: true }),
+  fixtureShift({ id: 'demo-shift-incident-001', jobId: 'demo-worker-job-incident-001', title: 'Hỗ trợ quầy sự kiện', description: 'Kịch bản sự cố chờ xử lý được cung cấp bởi fixture minh họa.', dateKey: '2026-10-12', schedule: '18:00 – 22:00', location: 'Điểm sự kiện demo, Quận 7, TP. HCM', pay: 300000, status: 'incident_pending', displayOnly: true }),
+  fixtureShift({ id: 'demo-shift-cancelled-001', jobId: 'demo-worker-job-cancelled-001', title: 'Soạn hàng buổi sáng', description: 'Kịch bản ca đã hủy được cung cấp bởi fixture minh họa.', dateKey: '2026-10-13', schedule: '09:00 – 11:00', location: 'Kho demo Tân Bình, TP. HCM', pay: 180000, status: 'cancelled', displayOnly: true }),
 ]
 
 export const workerWalletTransactions: WorkerTransaction[] = [
@@ -59,4 +63,14 @@ export const offerOutcomeMessages: Record<WorkerDecisionScenario, string> = {
   withdrawn: 'Offer demo đã bị thu hồi và không thể chấp nhận.',
   superseded: 'Offer demo không còn hiệu lực. Hãy xem trạng thái mới nhất trong danh sách demo.',
   invalid: 'Kịch bản demo đánh dấu offer không đủ điều kiện; không tạo assignment hoặc ca làm.',
+}
+
+function fixtureShift(input: Omit<WorkerShift, 'scheduledStartAt' | 'scheduledEndAt' | 'timeline'>) {
+  const { start, end } = shiftWindow(input.dateKey, input.schedule)
+  return {
+    ...input,
+    scheduledStartAt: start,
+    scheduledEndAt: end,
+    timeline: createShiftTimeline(input.dateKey, input.schedule, input.status),
+  }
 }
