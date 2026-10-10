@@ -1,6 +1,6 @@
 export type WorkerOfferStatus = 'offered' | 'accepted' | 'declined' | 'expired' | 'withdrawn' | 'superseded'
 export type WorkerDecisionScenario = 'success' | 'expired' | 'taken' | 'withdrawn' | 'superseded' | 'invalid'
-export type WorkerAssignmentStatus = 'active' | 'completed' | 'cancelled'
+export type WorkerAssignmentStatus = 'active' | 'completed' | 'cancelled' | 'replaced'
 export type WorkerShiftStatus = 'scheduled' | 'en_route' | 'checked_in' | 'pending_confirmation' | 'completed' | 'no_show' | 'incident_pending' | 'cancelled'
 export type WorkerShiftEventStatus = Exclude<WorkerShiftStatus, 'scheduled'>
 export type WorkerJobGroup = 'upcoming' | 'in_progress' | 'pending_confirmation' | 'completed' | 'history'
