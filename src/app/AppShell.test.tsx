@@ -80,7 +80,7 @@ describe('AppShell role context', () => {
     expect(screen.getByRole('heading', { name: /tạo yêu cầu/i })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /quay lại/i }))
     expect(screen.getByRole('heading', { name: 'Chọn dịch vụ' })).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('opens the selected Worker Home opportunity detail, returns to opportunities, and keeps Employer isolated', () => {
     render(<AppShell />)

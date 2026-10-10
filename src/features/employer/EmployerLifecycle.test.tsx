@@ -121,8 +121,8 @@ describe('Employer request lifecycle demo', () => {
     const props = { onBack: vi.fn(), onSelectScenario: vi.fn() }
 
     const { rerender } = render(<EmployerRequestDetail request={matching} {...props} />)
-    expect(screen.getByText('Chưa có người làm')).toBeInTheDocument()
-    expect(screen.getByText(/Employer không chọn ứng viên/i)).toBeInTheDocument()
+    expect(screen.getByText('Đang tìm người làm phù hợp')).toBeInTheDocument()
+    expect(screen.getAllByText(/Employer không chọn ứng viên/i)).toHaveLength(2)
     expect(screen.queryByText(/Người làm demo An/i)).not.toBeInTheDocument()
 
     rerender(<EmployerRequestDetail request={assigned} {...props} />)

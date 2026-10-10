@@ -130,7 +130,7 @@ export function AppShell() {
         ) : isEmployerScreen && destination === 'requestSummary' && localDraftRequest ? (
           <EmployerRequestSummary request={localDraftRequest} draft={savedEmployerDraft ?? employerDraft} onEdit={() => setDestination('requestDraft')} onHistory={() => setDestination('history')} />
         ) : isEmployerScreen && destination === 'requestDetail' && selectedRequest ? (
-          <EmployerRequestDetail request={selectedRequest} onBack={() => setDestination('history')} onSelectScenario={selectRequestScenario} />
+          <EmployerRequestDetail key={selectedRequest.id} request={selectedRequest} onBack={() => setDestination('history')} onSelectScenario={selectRequestScenario} />
         ) : !isEmployerScreen && destination === 'account' ? (
           <WorkerProfile profile={workerProfileDemo} skillCount={workerSkillIds.length} onNavigate={navigate} />
         ) : !isEmployerScreen && destination === 'skills' ? (
