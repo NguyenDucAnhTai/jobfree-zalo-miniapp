@@ -1,5 +1,6 @@
 import type { Destination, UiContext } from '../types/domain'
 import { navigationByContext } from '../navigation/navigation'
+import { NavigationIcon } from './NavigationIcon'
 
 export function BottomNavigation({ context, active, onNavigate }: {
   context: UiContext
@@ -16,7 +17,7 @@ export function BottomNavigation({ context, active, onNavigate }: {
           aria-current={active === item.id ? 'page' : undefined}
           onClick={() => onNavigate(item.id)}
         >
-          <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+          <span className="nav-icon"><NavigationIcon name={item.icon} /></span>
           <span>{item.label}</span>
         </button>
       ))}

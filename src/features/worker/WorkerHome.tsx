@@ -1,13 +1,22 @@
 import { useMemo, useState } from 'react'
 import { workerHomeJobs } from '../../mocks/fixtures'
-import type { Destination } from '../../types/domain'
-import type { WorkerProfileDemo } from '../../types/domain'
-import { workerProfileDemo } from '../../mocks/fixtures'
+import type { Destination, WorkerHomeJob } from '../../types/domain'
+import type { WorkerShift } from '../../types/workerLifecycle'
 import { workerScheduleKey } from '../../utils/workerDate'
+import { WorkerActiveShiftCard } from './WorkerActiveShiftCard'
+import { WorkerDashboardOverview } from './WorkerDashboardOverview'
+import { WorkerShiftControls } from './WorkerShiftControls'
 
 type JobFilter = 'Gần tôi' | 'Nhận ngay' | 'Lương cao' | 'Bắt đầu sớm'
 
-export function WorkerHome({ onNavigate, onSelectOpportunity, onOpenNewOffer, jobs = workerHomeJobs, ready = true, profile = workerProfileDemo }: { onNavigate: (destination: Destination) => void; onSelectOpportunity: (id: string) => void; onOpenNewOffer?: () => void; jobs?: typeof workerHomeJobs; ready?: boolean; profile?: WorkerProfileDemo }) {
+export function WorkerHome({ onNavigate, onSelectOpportunity, onOpenNewOffer, onOpenShift, jobs = workerHomeJobs, shift }: {
+  onNavigate: (destination: Destination) => void
+  onSelectOpportunity: (id: string) => void
+  onOpenNewOffer?: () => void
+  onOpenShift?: (id: string) => void
+  jobs?: WorkerHomeJob[]
+  shift?: WorkerShift
+}) {
   const [filter, setFilter] = useState<JobFilter>('Gần tôi')
   const visibleJobs = useMemo(() => {
     if (filter === 'Nhận ngay') return jobs.filter((job) => job.tag === 'NHẬN NGAY')
@@ -17,25 +26,14 @@ export function WorkerHome({ onNavigate, onSelectOpportunity, onOpenNewOffer, jo
   }, [filter, jobs])
 
   return (
-    <main className="worker-home">
-      <section className="worker-hero-card">
-        <div className="worker-hero-copy">
-          <h1 aria-label="Sẵn sàng nhận việc hôm nay">Sẵn sàng nhận việc<br aria-hidden="true" />hôm nay?</h1>
-          <p>{jobs.length ? `Có ${jobs.length} job phù hợp gần bạn` : 'Chưa có job phù hợp gần bạn'}</p>
-          <button className="worker-hero-button" type="button" onClick={() => onNavigate('opportunities')}>
-            Xem job gần tôi <span aria-hidden="true">→</span>
-          </button>
-        </div>
-        <div className="worker-hero-art" aria-hidden="true"><span /><i /></div>
-      </section>
-
-      <section className="worker-stats" aria-label="Thông tin hồ sơ demo">
-        <div className="worker-stat"><span className="stat-symbol verified-symbol" aria-hidden="true">✦</span><strong>{profile.verificationStatus === 'verified' ? 'Đã xác thực' : 'Chưa xác thực'}</strong></div>
-        <div className="worker-stat"><span className="stat-rating"><span aria-hidden="true">★</span> 4.8</span><strong>Rating</strong></div>
-        <div className="worker-stat"><span className={`stat-symbol ready-symbol${ready ? '' : ' is-unavailable'}`} aria-hidden="true">{ready ? '✓' : 'Ⅱ'}</span><strong>{ready ? 'Sẵn sàng làm' : 'Đang tạm nghỉ'}</strong></div>
-      </section>
+    <main className="worker-home worker-dashboard-home">
+      <p className="worker-demo-pill"><span aria-hidden="true">●</span> DEMO · NON-PRODUCTION</p>
+      <WorkerDashboardOverview />
+      <WorkerActiveShiftCard shift={shift} onOpen={(id) => onOpenShift?.(id)} />
+      <WorkerShiftControls />
 
       <section className="worker-job-section" aria-labelledby="worker-job-heading">
+        <div className="worker-discovery-callout"><div><span className="worker-dashboard-eyebrow">CƠ HỘI DÀNH CHO BẠN</span><h2>Khám phá việc mới</h2><p>{jobs.length ? `${jobs.length} công việc trong dữ liệu demo` : 'Chưa có công việc mới trong dữ liệu demo'}</p></div><button type="button" onClick={() => onNavigate('opportunities')}>Xem việc mới <span aria-hidden="true">→</span></button></div>
         <div className="worker-filter-row" role="group" aria-label="Lọc việc demo">
           {(['Gần tôi', 'Nhận ngay', 'Lương cao', 'Bắt đầu sớm'] as const).map((option) => (
             <button key={option} type="button" className={`worker-filter${filter === option ? ' is-selected' : ''}`} aria-pressed={filter === option} onClick={() => setFilter(option)}>{option}</button>
@@ -61,13 +59,11 @@ export function WorkerHome({ onNavigate, onSelectOpportunity, onOpenNewOffer, jo
               <button className="worker-detail-button" type="button" onClick={() => { onSelectOpportunity(job.id); onNavigate('opportunityDetail') }}>Xem chi tiết</button>
             </article>
           )) : (
-            <div className="worker-empty-state" role="status">
-              <span aria-hidden="true">⌕</span><strong>Chưa có job theo bộ lọc này</strong><p>Thử chọn bộ lọc khác nhé. Đây là dữ liệu demo.</p>
-            </div>
+            <div className="worker-empty-state" role="status" aria-label="Không có việc theo bộ lọc"><span aria-hidden="true">⌕</span><strong>Chưa có job theo bộ lọc này</strong><p>Thử chọn bộ lọc khác nhé. Đây là dữ liệu demo.</p></div>
           )}
         </div>
       </section>
-      <p className="worker-demo-note">Dữ liệu mô phỏng · Lịch tham chiếu 10–12/10/2026</p>
+      <p className="worker-demo-note">Cơ hội và lịch ca dùng dữ liệu mô phỏng cố định, không có điều phối thật.</p>
     </main>
   )
 }

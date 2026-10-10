@@ -1,18 +1,20 @@
 import type { Destination, UiContext } from '../types/domain'
 
-export const navigationByContext: Record<UiContext, { id: Destination; label: string; icon: string }[]> = {
+export type NavigationIconName = 'home' | 'services' | 'jobs' | 'schedule' | 'wallet' | 'account'
+
+export const navigationByContext: Record<UiContext, { id: Destination; label: string; icon: NavigationIconName }[]> = {
   employer: [
-    { id: 'home', label: 'Trang chủ', icon: '⌂' },
-    { id: 'services', label: 'Dịch vụ', icon: '▦' },
-    { id: 'history', label: 'Công việc', icon: '▤' },
-    { id: 'account', label: 'Tài khoản', icon: '○' },
+    { id: 'home', label: 'Trang chủ', icon: 'home' },
+    { id: 'services', label: 'Dịch vụ', icon: 'services' },
+    { id: 'history', label: 'Công việc', icon: 'jobs' },
+    { id: 'account', label: 'Tài khoản', icon: 'account' },
   ],
   worker: [
-    { id: 'home', label: 'Trang chủ', icon: '⌂' },
-    { id: 'jobs', label: 'Việc của tôi', icon: '▣' },
-    { id: 'schedule', label: 'Lịch trình', icon: '▦' },
-    { id: 'wallet', label: 'Ví', icon: '▣' },
-    { id: 'account', label: 'Tài khoản', icon: '○' },
+    { id: 'home', label: 'Trang chủ', icon: 'home' },
+    { id: 'jobs', label: 'Việc của tôi', icon: 'jobs' },
+    { id: 'schedule', label: 'Lịch trình', icon: 'schedule' },
+    { id: 'wallet', label: 'Ví', icon: 'wallet' },
+    { id: 'account', label: 'Tài khoản', icon: 'account' },
   ],
 }
 
