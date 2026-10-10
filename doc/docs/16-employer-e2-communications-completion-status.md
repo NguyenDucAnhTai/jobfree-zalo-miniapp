@@ -61,6 +61,17 @@
 - Browser keyboard resize behavior and device safe-area behavior should be visually reviewed by the Product Owner.
 - Production communication authorization, secure message transport/storage, VoIP/Zalo call compatibility, completion authority, review moderation and dispute policy remain backend/product decisions.
 
+## Worker My Jobs UI hotfix
+
+- Baseline: E2 commit `df65cd255f3d94fad613104b5acb16132efd54d0`; implementation remains on `feat/zmp-employer-lifecycle-e2`.
+- Root cause: Worker My Jobs styles used 8–9px text for timeline and primary metadata, allowed contact buttons to flex-wrap, omitted a timeline heading, and rendered contact actions from the existence of a link without resolving current authorization.
+- `WorkerJobs` now separates each card into status/pay header, job information, readable timeline, authorized contact section and a full-width detail CTA. Calendar/location use aligned SVG icons. The timeline heading is `Tiến trình ca · Demo`; event labels wrap and timestamps move below on widths up to 360px.
+- `WorkerShiftDetail` uses the same contact state, section spacing and readable timeline treatment. CSS selectors are scoped to Worker pages/contact variant; Employer contact layout and workflow components are unchanged.
+- Worker contacts use `resolveDemoCommunicationAuthorization` against current Worker assignment/shift state. Active assignments show equal call/chat controls; completed assignments show `Xem tin nhắn` only with an ended-job note; cancelled/replaced/invalid linked assignments show an unavailable note. Unlinked records do not get invented destinations. Each click checks current authorization again; actual calls/messages remain unavailable.
+- Product Owner screenshot mentioned in the review task was not available as a standalone reference file in this turn. The existing repository wireframe `doc/design-reference/worker-employer-wireframes/wireframes-complete-v4/Trang Việc của tôi.png` was inspected for layout hierarchy. This is not claimed as a pixel match to the referenced screenshot.
+- Actual rendered viewport and geometry inspection at 320×700, 360×780, 375×812, 393×852, 402×874 and 440×956: **NOT VERIFIED**. Local browser could not connect to the dev server in this environment. Zalo runtime remains **NOT VERIFIED**.
+- Hotfix validation: targeted Worker/AppShell/communication adapter tests passed (36/36); `npm run lint` PASS; `npm run typecheck` PASS; `npm run build` PASS with CSS emitted (`dist/assets/index-DKvhaRP0.css`, 81.30 kB); serialized full Vitest run `vitest run --maxWorkers=1` PASS (15 files / 124 tests). The default parallel `npm run test` attempt encountered a Vitest worker-start timeout and a 5-second Employer lifecycle timeout under load; that Employer test file passed separately (10/10).
+
 ## Files added or changed
 
 - Added communication and completion types, fixtures, mock adapters and adapter tests under `src/types/` and `src/mocks/`.

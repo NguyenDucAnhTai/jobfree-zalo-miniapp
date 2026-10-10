@@ -10,6 +10,12 @@ import { getWorkerJobs, getWorkerTransactions, getWorkerWalletSummary } from '..
 import { decideWorkerOffer } from '../../mocks/workerLifecycleAdapter'
 import { initialWorkerAssignments, initialWorkerShifts, workerOffers, workerWalletTransactions } from '../../mocks/workerLifecycleFixtures'
 import { formatShiftEventTime } from '../../utils/workerShiftTimeline'
+import { demoConversationLinks } from '../../mocks/jobfreeCommunicationsFixtures'
+import { resolveDemoCommunicationAuthorization } from '../../mocks/jobfreeCommunicationsAdapter'
+
+function contactAuthorization(link: (typeof demoConversationLinks)[number], action: 'chat' | 'send_message' | 'call', assignments = initialWorkerAssignments, shifts = initialWorkerShifts) {
+  return resolveDemoCommunicationAuthorization({ ...link, action, workerAssignments: assignments, workerShifts: shifts })
+}
 
 describe('Worker lifecycle screens', () => {
   it('shows offer detail for the selected offer and exposes a stale outcome', () => {
@@ -39,6 +45,39 @@ describe('Worker lifecycle screens', () => {
     expect(screen.getAllByRole('article')).toHaveLength(1)
     fireEvent.click(screen.getByRole('button', { name: 'Xem chi tiết ca' }))
     expect(onOpenShift).toHaveBeenCalledWith('demo-shift-002')
+  })
+
+  it('shows equally sized active contact actions and read-only history for completed assignments', () => {
+    const jobs = getWorkerJobs(initialWorkerAssignments, initialWorkerShifts)
+    const getContactLink = (shiftId: string) => {
+      const assignment = initialWorkerAssignments.find((item) => item.shiftId === shiftId)
+      return assignment ? demoConversationLinks.find((item) => item.role === 'worker' && item.assignmentId === assignment.id) : undefined
+    }
+    const onOpenChat = vi.fn(); const onOpenCall = vi.fn()
+    render(<WorkerJobs jobs={jobs} onOpenShift={vi.fn()} getContactLink={getContactLink} getContactAuthorization={(link, action) => contactAuthorization(link, action)} onOpenChat={onOpenChat} onOpenCall={onOpenCall} />)
+    const active = screen.getByText('Phụ chuyển vật dụng').closest('article')!
+    expect(within(active).getByRole('button', { name: 'Gọi' })).toBeInTheDocument()
+    expect(within(active).getByRole('button', { name: 'Nhắn tin' })).toBeInTheDocument()
+    fireEvent.click(within(active).getByRole('button', { name: 'Gọi' }))
+    expect(onOpenCall).toHaveBeenCalledWith(demoConversationLinks.find((item) => item.conversationId === 'JF-CHAT-WORKER-001'))
+
+    const completed = screen.getByText('Đóng gói đơn').closest('article')!
+    expect(within(completed).getByRole('button', { name: 'Xem tin nhắn' })).toBeInTheDocument()
+    expect(within(completed).queryByRole('button', { name: 'Gọi' })).not.toBeInTheDocument()
+    fireEvent.click(within(completed).getByRole('button', { name: 'Xem tin nhắn' }))
+    expect(onOpenChat).toHaveBeenCalledWith(demoConversationLinks.find((item) => item.conversationId === 'JF-CHAT-WORKER-003'))
+  })
+
+  it('blocks contact UI when current assignment authorization is cancelled', () => {
+    const link = demoConversationLinks.find((item) => item.conversationId === 'JF-CHAT-WORKER-001')!
+    const cancelledAssignments = initialWorkerAssignments.map((item) => item.id === link.assignmentId ? { ...item, status: 'cancelled' as const } : item)
+    const jobs = getWorkerJobs(initialWorkerAssignments, initialWorkerShifts)
+    const getContactLink = (shiftId: string) => shiftId === link.shiftId ? link : undefined
+    render(<WorkerJobs jobs={jobs} onOpenShift={vi.fn()} getContactLink={getContactLink} getContactAuthorization={(item, action) => contactAuthorization(item, action, cancelledAssignments)} onOpenChat={vi.fn()} onOpenCall={vi.fn()} />)
+    const activeCard = screen.getByText('Phụ chuyển vật dụng').closest('article')!
+    expect(within(activeCard).getByText(/liên hệ không khả dụng/i)).toBeInTheDocument()
+    expect(within(activeCard).queryByRole('button', { name: 'Gọi' })).not.toBeInTheDocument()
+    expect(within(activeCard).queryByRole('button', { name: 'Nhắn tin' })).not.toBeInTheDocument()
   })
 
   it.each([
@@ -96,6 +135,16 @@ describe('Worker lifecycle screens', () => {
     render(<WorkerShiftDetail shift={completed} onBack={vi.fn()} onTransition={vi.fn()} />)
     expect(screen.getAllByText('Đã hoàn thành · demo').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: /mô phỏng|hoàn tất ca/i })).not.toBeInTheDocument()
+  })
+
+  it('keeps completed Shift Detail contact read-only and hides call', () => {
+    const link = demoConversationLinks.find((item) => item.conversationId === 'JF-CHAT-WORKER-003')!
+    const onOpenChat = vi.fn(); const onOpenCall = vi.fn()
+    render(<WorkerShiftDetail shift={initialWorkerShifts[2]} onBack={vi.fn()} onTransition={vi.fn()} contactLink={link} getContactAuthorization={(item, action) => contactAuthorization(item, action)} onOpenChat={onOpenChat} onOpenCall={onOpenCall} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Xem tin nhắn' }))
+    expect(onOpenChat).toHaveBeenCalledWith(link)
+    expect(screen.queryByRole('button', { name: 'Gọi' })).not.toBeInTheDocument()
+    expect(screen.getByText(/công việc đã kết thúc/i)).toBeInTheDocument()
   })
 
   it('shows the same selected date shift on Schedule and Shift Detail', () => {
