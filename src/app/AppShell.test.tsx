@@ -1,0 +1,158 @@
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { AppShell } from './AppShell'
+
+describe('AppShell role context', () => {
+  it('starts in employer context and shows its home and navigation', () => {
+    render(<AppShell />)
+
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: /người thuê/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /job phù hợp với bạn/i })).not.toBeInTheDocument()
+  })
+
+  it('switches to worker home and resets worker navigation to home', () => {
+    render(<AppShell />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+
+    expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()
+    expect(screen.getByText('Phụ chuyển tối nay')).toBeInTheDocument()
+    const navigation = screen.getByRole('navigation', { name: /người làm/i })
+    expect(within(navigation).getByRole('button', { name: 'Trang chủ' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.queryByRole('heading', { name: /dịch vụ phổ biến/i })).not.toBeInTheDocument()
+  })
+
+  it('renders Worker header name and readiness from the shared demo profile and state', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    expect(screen.getByText('Nguyễn Minh Nam')).toBeInTheDocument()
+    expect(screen.getByText('● Sẵn sàng nhận việc · DEMO')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /tài khoản/i }))
+    fireEvent.click(screen.getByRole('button', { name: /lịch rảnh/i }))
+    fireEvent.click(screen.getByRole('button', { name: /tạm nghỉ/i }))
+    fireEvent.click(screen.getByRole('button', { name: /trang chủ/i }))
+    expect(screen.getByText('● Đang tạm nghỉ · DEMO')).toBeInTheDocument()
+  })
+
+  it('opens the existing upcoming shift detail from Worker Home and returns to My Jobs', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getByRole('button', { name: /xem chi tiết ca/i }))
+    expect(screen.getByRole('heading', { name: 'Chi tiết ca làm' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Phụ chuyển vật dụng' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '‹ Việc của tôi' }))
+    expect(screen.getByRole('heading', { name: 'Việc của tôi' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /lịch sử yêu cầu/i })).not.toBeInTheDocument()
+  })
+
+  it('keeps role navigation isolated and returns to home on context change', () => {
+    render(<AppShell />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    expect(screen.getByRole('heading', { name: 'Lịch sử yêu cầu' })).toBeInTheDocument()
+    expect(screen.getByText(/JF-DEMO-0101/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    expect(screen.getByRole('heading', { name: /job phù hợp với bạn/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Công việc' })).not.toBeInTheDocument()
+
+    const navigation = screen.getByRole('navigation', { name: /người làm/i })
+    expect(within(navigation).queryByRole('button', { name: 'Dịch vụ' })).not.toBeInTheDocument()
+  })
+
+  it('keeps Worker routes and profile state separate while Employer lifecycle stays available', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Xem tất cả' }))
+    expect(screen.getByRole('heading', { name: 'Việc mới' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Tài khoản' })[0])
+    expect(screen.getByRole('heading', { name: 'Tài khoản' })).toBeInTheDocument()
+    expect(screen.queryByText(/JF-DEMO-/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /lịch rảnh/i }))
+    fireEvent.click(screen.getByRole('button', { name: /tạm nghỉ/i }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Trang chủ' })[0])
+    expect(screen.getByText(/đang tạm nghỉ · demo/i)).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Dịch vụ' })[0])
+    fireEvent.click(screen.getByRole('button', { name: /dọn dẹp/i }))
+    expect(screen.getByRole('heading', { name: /tạo yêu cầu/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /quay lại/i }))
+    expect(screen.getByRole('heading', { name: 'Chọn dịch vụ' })).toBeInTheDocument()
+  }, 15000)
+
+  it('opens the selected Worker Home opportunity detail, returns to opportunities, and keeps Employer isolated', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Xem chi tiết' })[1])
+
+    expect(screen.getByRole('heading', { name: 'Chi tiết công việc' })).toBeInTheDocument()
+    expect(screen.getByText(/demo-worker-home-job-02/)).toBeInTheDocument()
+    expect(screen.getByText(/không phân công thật/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '‹ Quay lại' }))
+    expect(screen.getByRole('heading', { name: 'Việc mới' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Chi tiết công việc' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    expect(screen.getByRole('heading', { name: 'Lịch sử yêu cầu' })).toBeInTheDocument()
+  })
+
+  it('accepts only the fixed success offer scenario, opens My Jobs and prevents duplicates', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Mở thông báo việc mới demo' }))
+    expect(screen.getByRole('dialog', { name: 'Công việc mới cho bạn' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /xác nhận nhận việc demo/i }))
+    expect(screen.getByRole('heading', { name: 'Việc của tôi' })).toBeInTheDocument()
+    expect(screen.getByText('Phụ chuyển tối nay')).toBeInTheDocument()
+    expect(screen.getAllByRole('article')).toHaveLength(7)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mở thông báo việc mới demo' }))
+    expect(screen.getByRole('button', { name: 'Offer đã đóng' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Đóng thông báo việc mới' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Việc của tôi' }))
+    expect(screen.getAllByRole('article')).toHaveLength(7)
+  })
+
+  it('renders Schedule, Wallet and Shift routes only inside Worker context', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Lịch trình' }))
+    expect(screen.getByRole('heading', { name: 'Lịch trình' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Ví' }))
+    expect(screen.getByRole('heading', { name: 'Ví của bạn' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ví của bạn' })).not.toBeInTheDocument()
+  })
+
+  it('navigates to exceptional fixture details from My Jobs and Schedule, with route-specific back behavior', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Việc của tôi' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Lịch sử' }))
+    const noShowCard = screen.getByText('Hỗ trợ kiểm kê buổi sáng').closest('article')!
+    expect(within(noShowCard).getAllByText('Không tham gia · demo fixture').length).toBeGreaterThan(0)
+    fireEvent.click(within(noShowCard).getByRole('button', { name: 'Xem chi tiết ca' }))
+    expect(screen.getAllByText('Không tham gia · demo fixture').length).toBeGreaterThanOrEqual(2)
+    fireEvent.click(screen.getByRole('button', { name: '‹ Việc của tôi' }))
+    expect(screen.getByRole('heading', { name: 'Việc của tôi' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lịch trình' }))
+    fireEvent.click(screen.getByText('12').closest('button')!)
+    const incidentCard = screen.getByRole('button', { name: /hỗ trợ quầy sự kiện/i })
+    expect(within(incidentCard).getByText('Chờ xử lý sự cố · demo fixture')).toBeInTheDocument()
+    fireEvent.click(incidentCard)
+    expect(screen.getByText('Ghi nhận sự cố · demo fixture')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '‹ Việc của tôi' }))
+    expect(screen.getByRole('heading', { name: 'Lịch trình' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    expect(screen.getByRole('heading', { name: 'Lịch sử yêu cầu' })).toBeInTheDocument()
+    expect(screen.queryByText('Hỗ trợ quầy sự kiện')).not.toBeInTheDocument()
+  }, 15000)
+})
