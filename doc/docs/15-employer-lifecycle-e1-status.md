@@ -14,7 +14,8 @@
 - Replacement matching continues to show only the ended Worker as former and says that no replacement is present in the fixture.
 - E15/E16 display an Employer shift status card, planned start/end and a separate chronological event timeline. Employer controls cannot set check-in or completion status.
 - E18 extension bottom sheet offers +30 minutes, +1 hour and +2 hours, a proposed end time and a fixed reference fee labeled demo. Submission only creates a local demo request. Only `approved_demo` presents a separate effective end time; the source schedule remains intact.
-- The existing Home → History → Request Detail navigation is retained. Scenario selection remains within Request Detail, and the sheet is dismissible.
+- Extension sheet supports Escape, focus trapping, focus return to its trigger, and background scroll/input blocking while open.
+- The existing Home → History → Request Detail navigation is retained. Scenario selection remains within Request Detail, and switching requests closes the sheet.
 
 ## Fixture relationships and IDs
 
@@ -35,14 +36,19 @@ All event times are fixed ISO timestamps. The fixture scheduled times are separa
 - Extension result scenarios are internal frontend demo labels, not production API states or approved business rules.
 - Demo reference fees: 25,000 VND / 30 minutes, 50,000 VND / 60 minutes, 100,000 VND / 120 minutes. These are controlled fixture values, not production pricing.
 - A submitted/pending extension does not update `scheduledEndAt` or the Worker shift fixture. Duplicate pending requests for the same shift are blocked. Only an explicit `approved_demo` result includes a separate effective end time for presentation.
+- Extension history is session-only in-memory state owned by `AppShell`, keyed by the pair `requestId + shiftId`. It is preserved when navigating to another request or role and back, but only the matching request/shift history is rendered. Reloading the app clears the demo history. Worker screens never receive or render this state.
+- IDs use the deterministic per-scope sequence `JF-E1-EXT-{requestId}-{shiftId}-{sequence}`. The sequence is derived from the existing history length; there is no random value or runtime clock. Resolved same-duration requests therefore remain unique.
+- A new proposal starts from the most recent prior `approved_demo` effective end when present; otherwise it starts from the fixture effective end. The original `scheduledEndAt` remains the immutable schedule reference. No Worker shift fixture is changed.
 - No payment, funding, Worker consent, matching, location or production API is simulated as a real action.
 
 ## Tests and verification
 
-- E1 tests cover matching states, absence of selectable candidates, synthetic assigned Worker, replaced Worker presentation, explicit linked IDs, chronological shift events, all three extension durations, midnight crossing, duplicate/invalid requests, immutable original schedule and approved-versus-submitted outcomes.
+- E1 tests cover matching states, absence of selectable candidates, synthetic assigned Worker, replaced Worker presentation, explicit linked IDs, chronological shift events, all three extension durations, midnight crossing, duplicate/invalid requests, same-duration ID uniqueness, approved-extension chaining, immutable original schedule and approved-versus-submitted outcomes.
+- AppShell integration test navigates `JF-DEMO-0105` → submits an extension → switches to `JF-DEMO-0107` → verifies no result leak → switches back and verifies session history is preserved; it also switches roles and verifies isolation.
+- Modal interaction test covers `Escape`, focus trap, focus restoration and body scroll lock.
 - Employer Request lifecycle tests cover draft/summary/history/detail and role isolation. Existing Worker and Employer marketplace suites remain part of the full run.
 - CSS entry validation remains covered by the pre-existing single `App.css` import regression; production build asset verification will be recorded with final delivery.
-- Commands and final counts are recorded after the complete validation run below.
+- Review-fix implementation commit: `12112967364f62407afa803573f6b03fabd7ee63`. Documentation commit follows; the final branch HEAD is reported in delivery.
 
 ## UX approximation and limitations
 
@@ -55,9 +61,9 @@ All event times are fixed ISO timestamps. The fixture scheduled times are separa
 
 - `npm run lint`: PASS.
 - `npm run typecheck`: PASS.
-- `npx vitest run --maxWorkers=1 --reporter=dot`: PASS — 12 files / 96 tests. Serial execution is used because this environment intermittently timed out one long AppShell test under concurrent load; its test timeout is set to 15 seconds, matching the existing long navigation test.
-- `npm run build`: PASS — Vite emitted `dist/assets/index-BFSaNXKu.css` (70.66 kB) and `dist/assets/index-DpwWXqNO.js` (325.76 kB).
-- CSS entry check: PASS — `src/main.tsx` imports `App.css` once; the built CSS contains the new Employer E1 selectors.
-- `git diff --check`: PASS.
+- `npx vitest run --maxWorkers=1 --reporter=dot`: PASS, 12 files / 99 tests.
+- `npm run build`: PASS; production CSS emitted as `dist/assets/index-BFSaNXKu.css` (70.66 kB).
+- CSS entry check: PASS; `src/main.tsx` imports `App.css` exactly once.
+- `git diff --check`: PASS (line-ending normalization warnings only).
 - Employer 393×852, Employer 440×956, Worker 402×874: NOT VERIFIED. A local Vite server started, but the in-app browser could not connect (`ERR_CONNECTION_TIMED_OUT`), so no rendered screenshots or viewport evidence were captured.
 - Zalo Mini App runtime: NOT VERIFIED.
