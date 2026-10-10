@@ -320,3 +320,92 @@
 .worker-new-job-modal :focus-visible, .worker-offer-page :focus-visible, .worker-jobs-page :focus-visible, .worker-schedule-page :focus-visible, .worker-wallet-page :focus-visible { outline: 3px solid #8b6c08; outline-offset: 2px; }
 .worker-job-timeline { display: grid; gap: 5px; margin: 9px 0 4px; padding: 8px 9px; border-left: 2px solid #eadb9d; background: #fffdf6; list-style: none; }.worker-job-timeline li { display: flex; justify-content: space-between; gap: 8px; color: #666155; font-size: 8px; line-height: 1.35; }.worker-job-timeline time { flex: 0 0 auto; color: #8b8060; }
 @media (max-width: 360px) { .worker-wallet-metrics { grid-template-columns: 1fr; }.worker-wallet-metrics > div { min-height: 48px; }.worker-offer-actions { grid-template-columns: 1fr; }.worker-calendar-days { gap: 0; }.worker-calendar-days button strong { font-size: 12px; } }
+
+/* Worker Home dashboard refinement: isolated from Employer screens. */
+.worker-shared-header {
+  min-height: 86px;
+  height: auto;
+  margin: calc(-1 * max(14px, env(safe-area-inset-top))) -20px 12px;
+  padding: max(18px, env(safe-area-inset-top)) 20px 14px;
+  background: #ffc400;
+  color: #342900;
+}
+.worker-shared-header .worker-avatar { width: 46px; height: 46px; flex-basis: 46px; border: 2px solid #fff7d6; background: #fff4c8; color: #604900; }
+.worker-shared-header .header-copy { gap: 2px; }
+.worker-shared-header .header-copy > span { color: #6b5505; font-size: 11px; }
+.worker-shared-header .header-copy strong { color: #332800; font-size: 15px; line-height: 1.2; }
+.worker-header-readiness { color: #5f4b08; font-size: 9px; font-weight: 650; }
+.worker-shared-header .icon-button { flex: 0 0 40px; width: 40px; height: 40px; border-color: #e4af00; background: #ffdc4b; color: #443400; }
+.worker-shared-header .icon-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.context-worker .role-switch { width: fit-content; margin: 0 0 14px auto; }
+.worker-dashboard-home { padding-bottom: max(26px, env(safe-area-inset-bottom)); }
+.worker-demo-pill { display: flex; align-items: center; gap: 6px; width: fit-content; margin: 0 0 10px 2px; color: #84734b; font-size: 8px; font-weight: 800; letter-spacing: .65px; }
+.worker-demo-pill span { color: #b58a00; font-size: 8px; }
+.worker-dashboard-overview { padding: 17px; border: 1px solid #f1d872; border-radius: 24px; background: linear-gradient(145deg, #fff4bf, #fff9df); box-shadow: 0 9px 24px #80660012; }
+.worker-dashboard-overview-heading { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+.worker-dashboard-eyebrow { display: block; margin-bottom: 4px; color: #8b711d; font-size: 8px; font-weight: 800; letter-spacing: .75px; }
+.worker-dashboard-overview h1 { margin: 0; color: #3b300b; font-size: 19px; line-height: 1.25; letter-spacing: -.3px; }
+.worker-dashboard-date { flex: 0 0 auto; padding: 5px 7px; border: 1px solid #ead786; border-radius: 12px; background: #fff9e1; color: #76631f; font-size: 8px; }
+.worker-dashboard-income { display: grid; gap: 4px; margin: 14px 0 12px; }
+.worker-dashboard-income > span { color: #726538; font-size: 10px; font-weight: 650; }
+.worker-dashboard-income > strong { color: #433400; font-size: clamp(28px, 8vw, 34px); line-height: 1; letter-spacing: -.8px; }
+.worker-dashboard-income > small { color: #7d724c; font-size: 8px; line-height: 1.4; }
+.worker-dashboard-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.worker-dashboard-metrics > div { min-width: 0; min-height: 61px; display: grid; align-content: center; gap: 4px; padding: 8px; border: 1px solid #f0e2a8; border-radius: 15px; background: #fffdf4; text-align: center; }
+.worker-dashboard-metrics strong { overflow-wrap: anywhere; color: #51410e; font-size: 15px; line-height: 1.1; }
+.worker-dashboard-metrics span { color: #7c7358; font-size: 8px; line-height: 1.25; }
+.worker-dashboard-disclaimer { margin: 10px 1px 0; color: #8b805d; font-size: 8px; line-height: 1.4; }
+.worker-home-shift-section { margin-top: 23px; }
+.worker-home-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 10px; }
+.worker-home-section-heading h2 { margin: 0; color: #302c23; font-size: 16px; line-height: 1.25; letter-spacing: -.2px; }
+.worker-dashboard-section-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px; background: #fff0b4; color: #876700; font-size: 18px; }
+.worker-active-shift-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 100px; gap: 7px 10px; padding: 14px; border: 1px solid #eee7d9; border-radius: 22px; background: #fff; box-shadow: 0 7px 19px #2923180b; }
+.worker-active-shift-heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.worker-active-shift-icon { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 12px; background: #fff2c5; color: #927000; font-size: 17px; }
+.worker-active-shift-card > h3 { grid-column: 1; margin: 0; align-self: end; color: #302d26; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.worker-active-shift-location { grid-column: 1; display: flex; gap: 5px; margin: 0; color: #777164; font-size: 9px; line-height: 1.45; }
+.worker-active-shift-schedule { grid-column: 1; display: grid; gap: 3px; align-self: start; color: #625d51; font-size: 9px; }
+.worker-active-shift-schedule strong { color: #493a0b; font-size: 11px; }
+.worker-shift-time-indicator { grid-column: 2; grid-row: 2 / span 3; width: 94px; height: 94px; align-self: center; justify-self: center; display: grid; align-content: center; justify-items: center; gap: 3px; border: 5px solid #ffdd54; border-right-color: #f4edda; border-radius: 50%; background: #fffdf5; text-align: center; transform: rotate(-20deg); }
+.worker-shift-time-indicator > * { transform: rotate(20deg); }
+.worker-shift-time-indicator span { color: #897535; font-size: 6px; font-weight: 800; letter-spacing: .3px; }
+.worker-shift-time-indicator strong { color: #40330c; font-size: 17px; line-height: 1; }
+.worker-shift-time-indicator small { color: #8b826b; font-size: 7px; }
+.worker-active-shift-cta { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 43px; margin-top: 3px; border: 0; border-radius: 14px; background: #ffc400; color: #352900; font-size: 11px; font-weight: 750; }
+.worker-active-shift-cta span { font-size: 15px; }
+.worker-active-shift-note { grid-column: 1 / -1; margin: 0; color: #8b8579; font-size: 8px; line-height: 1.4; text-align: center; }
+.worker-home-shift-empty { padding: 18px; border: 1px dashed #e3d9c3; border-radius: 18px; background: #fffdf7; text-align: center; }
+.worker-home-shift-empty strong { color: #4a4435; font-size: 12px; }.worker-home-shift-empty p { margin-top: 5px; color: #817b6d; font-size: 9px; }
+.worker-shift-controls { margin-top: 20px; padding: 15px; border: 1px solid #eee9df; border-radius: 22px; background: #fff; box-shadow: 0 6px 17px #29231809; }
+.worker-shift-control-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.worker-shift-control-grid button { min-width: 0; min-height: 67px; display: grid; align-content: center; justify-items: center; gap: 5px; padding: 5px 2px; border: 1px solid #efede8; border-radius: 13px; background: #faf9f6; color: #89857d; opacity: .82; }
+.worker-shift-control-grid button > span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 10px; background: #fff0b7; color: #826400; font-size: 13px; font-weight: 750; }
+.worker-shift-control-grid button strong { font-size: 8px; }
+.worker-shift-controls-note { margin: 9px 1px 0; color: #8a857a; font-size: 8px; line-height: 1.45; }
+.worker-discovery-callout { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 13px; padding: 14px; border: 1px solid #eee4c5; border-radius: 19px; background: #fffdf6; }
+.worker-discovery-callout h2 { margin: 0; color: #393220; font-size: 15px; line-height: 1.25; }
+.worker-discovery-callout p { margin-top: 4px; color: #7d7769; font-size: 9px; }
+.worker-discovery-callout > button { flex: 0 0 auto; min-height: 38px; padding: 0 10px; border: 0; border-radius: 12px; background: #ffc400; color: #382b00; font-size: 9px; font-weight: 750; }
+.worker-discovery-callout > button span { margin-left: 3px; }
+.worker-dashboard-home .worker-job-section { margin-top: 22px; }
+.context-worker .bottom-navigation { padding: 6px 5px max(8px, env(safe-area-inset-bottom)); }
+.context-worker .nav-item { min-height: 54px; gap: 3px; padding: 4px 1px; color: #7c8796; font-size: 8px; font-weight: 600; }
+.context-worker .nav-icon { width: 29px; height: 27px; border-radius: 10px; color: #7c8796; }
+.navigation-svg { display: block; width: 21px; height: 21px; }
+.context-worker .nav-item.is-active { color: #a36f00; font-weight: 750; }
+.context-worker .nav-item.is-active .nav-icon { width: 31px; height: 28px; border-radius: 10px; background: #fff1bd; color: #b57a00; }
+.context-worker .nav-item:focus-visible { border-radius: 12px; outline-offset: -1px; }
+.context-worker .nav-item > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 380px) {
+  .worker-shared-header { margin-inline: -14px; padding-inline: 14px; }
+  .worker-shift-controls { padding: 12px 9px; }
+  .worker-shift-control-grid { gap: 3px; }
+  .worker-shift-control-grid button { min-height: 62px; }
+  .worker-dashboard-overview { padding: 14px; }
+  .worker-dashboard-metrics { gap: 5px; }
+  .worker-dashboard-metrics > div { padding: 6px 3px; }
+  .worker-active-shift-card { grid-template-columns: minmax(0, 1fr) 86px; padding: 12px; }
+  .worker-shift-time-indicator { width: 82px; height: 82px; }
+  .context-worker .nav-item { font-size: 7px; }
+  .navigation-svg { width: 20px; height: 20px; }
+}

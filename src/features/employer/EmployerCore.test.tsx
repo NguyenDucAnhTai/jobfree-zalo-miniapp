@@ -48,7 +48,7 @@ describe('Employer core demo flows', () => {
     expect(screen.getByLabelText('Mô tả công việc')).toHaveValue('Hỗ trợ chuyển đồ lên tầng hai')
 
     fireEvent.click(screen.getByRole('button', { name: 'Người làm' }))
-    expect(screen.getByRole('heading', { name: /sẵn sàng nhận việc/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tổng quan hôm nay' })).toBeInTheDocument()
     expect(screen.queryByLabelText('Mô tả công việc')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Người thuê' }))

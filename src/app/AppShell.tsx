@@ -117,9 +117,9 @@ export function AppShell() {
   return (
     <div className={`app-shell context-${context}`} data-jobfree-context={context}>
       <div className="app-scroll-area">
-        <SharedHeader context={context} onOpenNewOffer={context === 'worker' ? () => { setModalDecisionMessage(''); setNewJobModalOpen(true) } : undefined} />
+        <SharedHeader context={context} workerProfile={workerProfileDemo} workerReady={workerReady} onOpenNewOffer={context === 'worker' ? () => { setModalDecisionMessage(''); setNewJobModalOpen(true) } : undefined} />
         <RoleSwitcher key={context} context={context} onChange={changeContext} />
-        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} onSelectOpportunity={setSelectedOpportunityId} onOpenNewOffer={() => { setModalDecisionMessage(''); setNewJobModalOpen(true) }} ready={workerReady} />) : isEmployerScreen && destination === 'services' ? (
+        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} onSelectOpportunity={setSelectedOpportunityId} onOpenNewOffer={() => { setModalDecisionMessage(''); setNewJobModalOpen(true) }} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} shift={workerShifts.find((shift) => shift.status === 'checked_in') ?? workerShifts.find((shift) => shift.status === 'en_route') ?? workerShifts.find((shift) => shift.status === 'scheduled')} />) : isEmployerScreen && destination === 'services' ? (
           <EmployerServiceCatalog onChoose={chooseService} />
         ) : isEmployerScreen && destination === 'history' ? (
           <EmployerRequestHistory requests={employerRequests} onOpen={openRequest} />
