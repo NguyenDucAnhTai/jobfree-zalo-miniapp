@@ -18,6 +18,10 @@ export function formatDemoClock(iso: string) {
   return new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso))
 }
 
+export function employerExtensionScopeKey(requestId: string, shiftId: string) {
+  return `${requestId}::${shiftId}`
+}
+
 export type EmployerExtensionResult = { ok: true; request: EmployerExtensionRequest } | { ok: false; reason: 'invalid_duration' | 'not_extendable' | 'duplicate_pending' }
 
 export function createEmployerExtensionRequest(
@@ -32,11 +36,13 @@ export function createEmployerExtensionRequest(
     return { ok: false, reason: 'duplicate_pending' }
   }
   const duration = durationMinutes as EmployerExtensionDuration
-  const proposedEndAt = addMinutesToIso(tracking.effectiveEndAt, duration)
+  const priorApprovedEndAt = [...existing].reverse().find((item) => item.effectiveEndAt)?.effectiveEndAt
+  const proposedEndAt = addMinutesToIso(priorApprovedEndAt ?? tracking.effectiveEndAt, duration)
+  const sequence = existing.length + 1
   return {
     ok: true,
     request: {
-      id: `JF-E1-EXT-${tracking.requestId}-${duration}`,
+      id: `JF-E1-EXT-${tracking.requestId}-${tracking.shiftId}-${String(sequence).padStart(3, '0')}`,
       requestId: tracking.requestId,
       assignmentId: tracking.assignmentId,
       shiftId: tracking.shiftId,

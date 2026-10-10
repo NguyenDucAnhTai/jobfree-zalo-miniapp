@@ -82,6 +82,39 @@ describe('AppShell role context', () => {
     expect(screen.getByRole('heading', { name: 'Chọn dịch vụ' })).toBeInTheDocument()
   }, 15000)
 
+  it('preserves extension history by request and shift while switching Employer scenarios and roles', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    fireEvent.click(screen.getByRole('button', { name: /JF-DEMO-0105/i }))
+    fireEvent.click(screen.getByRole('button', { name: /đề nghị gia hạn ca/i }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Kết quả extension demo' }), { target: { value: 'approved_demo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Gửi đề nghị demo' }))
+    const firstId = screen.getByText(/Mã yêu cầu demo:/).textContent
+    expect(screen.getByText(/hiệu lực demo: 18:30/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /đề nghị gia hạn ca/i }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chọn tình huống mẫu' }), { target: { value: 'JF-DEMO-0107' } })
+    expect(screen.queryByRole('dialog', { name: 'Gia hạn ca làm' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Mã yêu cầu demo:/)).not.toBeInTheDocument()
+    fireEvent.change(screen.getByRole('combobox', { name: 'Chọn tình huống mẫu' }), { target: { value: 'JF-DEMO-0105' } })
+    expect(screen.getByText(firstId!)).toBeInTheDocument()
+    expect(screen.getByText(/hiệu lực demo: 18:30/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /đề nghị gia hạn ca/i }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Kết quả extension demo' }), { target: { value: 'approved_demo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Gửi đề nghị demo' }))
+    const secondId = screen.getByText(/Mã yêu cầu demo:/).textContent
+    expect(secondId).not.toBe(firstId)
+    expect(screen.getByText(/đề xuất: 19:00 · hiệu lực demo: 19:00/)).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    expect(screen.queryByText(/JF-E1-EXT-/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    fireEvent.click(screen.getByRole('button', { name: /JF-DEMO-0105/i }))
+    expect(screen.getByText(secondId!)).toBeInTheDocument()
+  }, 20000)
+
   it('opens the selected Worker Home opportunity detail, returns to opportunities, and keeps Employer isolated', () => {
     render(<AppShell />)
     fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])

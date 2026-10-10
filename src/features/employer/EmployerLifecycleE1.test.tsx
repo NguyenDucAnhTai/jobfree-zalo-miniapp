@@ -74,6 +74,25 @@ describe('Employer E1 lifecycle demo', () => {
     expect(tracking.scheduledEndAt).toContain('23:45')
   })
 
+  it('assigns unique deterministic IDs and chains a later extension from the prior approved demo end', () => {
+    const tracking = employerShiftTrackingFixtures[0]
+    const first = createEmployerExtensionRequest(tracking, 30, 'approved_demo')
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const second = createEmployerExtensionRequest(tracking, 30, 'approved_demo', [first.request])
+    expect(second.ok).toBe(true)
+    if (!second.ok) return
+    expect(second.request.id).not.toBe(first.request.id)
+    expect(second.request.id).toContain(tracking.requestId)
+    expect(second.request.requestId).toBe(tracking.requestId)
+    expect(second.request.assignmentId).toBe(tracking.assignmentId)
+    expect(second.request.shiftId).toBe(tracking.shiftId)
+    expect(second.request.originalEndAt).toBe(tracking.scheduledEndAt)
+    expect(second.request.proposedEndAt).toBe('2026-10-10T12:00:00.000Z')
+    expect(second.request.effectiveEndAt).toBe(second.request.proposedEndAt)
+    expect(tracking.effectiveEndAt).toBe(tracking.scheduledEndAt)
+  })
+
   it('blocks invalid and duplicate pending extensions', () => {
     const tracking = employerShiftTrackingFixtures[0]
     expect(createEmployerExtensionRequest(tracking, 45).ok).toBe(false)
@@ -103,5 +122,22 @@ describe('Employer E1 lifecycle demo', () => {
     approvedView.rerender(<EmployerRequestDetail key="JF-DEMO-0107" request={employerRequestScenarios.find((item) => item.id === 'JF-DEMO-0107')!} {...noops} />)
     expect(screen.queryByText(/hiệu lực demo: 18:30/)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /đề nghị gia hạn ca/i })).not.toBeInTheDocument()
+  })
+
+  it('traps keyboard focus in the extension modal, closes on Escape, and restores trigger focus', () => {
+    render(<EmployerRequestDetail request={employerRequestScenarios.find((item) => item.id === 'JF-DEMO-0105')!} {...noops} />)
+    const trigger = screen.getByRole('button', { name: /đề nghị gia hạn ca/i })
+    fireEvent.click(trigger)
+    const dialog = screen.getByRole('dialog', { name: 'Gia hạn ca làm' })
+    const close = screen.getByRole('button', { name: 'Đóng' })
+    expect(close).toHaveFocus()
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(document.body.style.overflow).toBe('hidden')
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true })
+    expect(screen.getByRole('button', { name: 'Gửi đề nghị demo' })).toHaveFocus()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+    expect(document.body.style.overflow).not.toBe('hidden')
   })
 })

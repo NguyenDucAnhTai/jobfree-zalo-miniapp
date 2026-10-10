@@ -44,3 +44,12 @@ export interface EmployerExtensionRequest {
   createdAt: string
   message: string
 }
+
+/** In-memory demo history scoped by requestId + shiftId; retained until app reload. */
+export interface EmployerExtensionSessionState {
+  requestId: string
+  assignmentId: string
+  shiftId: string
+  requests: EmployerExtensionRequest[]
+  error?: string
+}

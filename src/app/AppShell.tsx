@@ -19,11 +19,14 @@ import { WorkerSkills } from '../features/worker/WorkerSkills'
 import { WorkerTransactionDetail, WorkerWallet } from '../features/worker/WorkerWallet'
 import { emptyEmployerRequestDraft, workerProfileDemo, workerSavedSkillIds } from '../mocks/fixtures'
 import { createDraftRequest, employerRequestScenarios, getEmployerRequestById } from '../mocks/employerRequestAdapter'
+import { employerExtensionScopeKey } from '../mocks/employerLifecycleAdapter'
+import { getEmployerShiftTracking } from '../mocks/employerLifecycleFixtures'
 import { destinationLabel, isDestinationForContext } from '../navigation/navigation'
 import { decideWorkerOffer, getWorkerJobs, getWorkerTransactions, transitionWorkerShift, type WorkerOfferDecisionResult } from '../mocks/workerLifecycleAdapter'
 import { initialWorkerAssignments, initialWorkerShifts, workerOffers, workerWalletTransactions } from '../mocks/workerLifecycleFixtures'
 import type { Destination, EmployerRequestDraft, EmployerWorkRequest, UiContext } from '../types/domain'
 import type { WorkerDecisionScenario, WorkerOfferStatus, WorkerShiftStatus } from '../types/workerLifecycle'
+import type { EmployerExtensionSessionState } from '../types/employerLifecycle'
 
 export function AppShell() {
   const [context, setContext] = useState<UiContext>('employer')
@@ -32,6 +35,7 @@ export function AppShell() {
   const [savedEmployerDraft, setSavedEmployerDraft] = useState<EmployerRequestDraft>()
   const [localDraftRequest, setLocalDraftRequest] = useState<EmployerWorkRequest>()
   const [selectedRequestId, setSelectedRequestId] = useState(employerRequestScenarios[0].id)
+  const [employerExtensionSessions, setEmployerExtensionSessions] = useState<Record<string, EmployerExtensionSessionState>>({})
   const [workerReady, setWorkerReady] = useState(true)
   const [workerSkillIds, setWorkerSkillIds] = useState<string[]>(workerSavedSkillIds)
   const [selectedOpportunityId, setSelectedOpportunityId] = useState<string>()
@@ -113,6 +117,8 @@ export function AppShell() {
   const isHome = destination === 'home'
   const isEmployerScreen = context === 'employer'
   const selectedRequest = getEmployerRequestById(selectedRequestId, localDraftRequest)
+  const selectedEmployerShift = selectedRequest ? getEmployerShiftTracking(selectedRequest.id) : undefined
+  const selectedExtensionScope = selectedEmployerShift ? employerExtensionScopeKey(selectedEmployerShift.requestId, selectedEmployerShift.shiftId) : undefined
   const employerRequests = localDraftRequest ? [localDraftRequest, ...employerRequestScenarios] : employerRequestScenarios
   return (
     <div className={`app-shell context-${context}`} data-jobfree-context={context}>
@@ -130,7 +136,18 @@ export function AppShell() {
         ) : isEmployerScreen && destination === 'requestSummary' && localDraftRequest ? (
           <EmployerRequestSummary request={localDraftRequest} draft={savedEmployerDraft ?? employerDraft} onEdit={() => setDestination('requestDraft')} onHistory={() => setDestination('history')} />
         ) : isEmployerScreen && destination === 'requestDetail' && selectedRequest ? (
-          <EmployerRequestDetail key={selectedRequest.id} request={selectedRequest} onBack={() => setDestination('history')} onSelectScenario={selectRequestScenario} />
+          <EmployerRequestDetail
+            key={selectedRequest.id}
+            request={selectedRequest}
+            extensionState={selectedExtensionScope ? employerExtensionSessions[selectedExtensionScope] : undefined}
+            onExtensionStateChange={(nextState) => {
+              if (selectedExtensionScope && nextState.requestId === selectedRequest.id && nextState.shiftId === selectedEmployerShift?.shiftId) {
+                setEmployerExtensionSessions((current) => ({ ...current, [selectedExtensionScope]: nextState }))
+              }
+            }}
+            onBack={() => setDestination('history')}
+            onSelectScenario={selectRequestScenario}
+          />
         ) : !isEmployerScreen && destination === 'account' ? (
           <WorkerProfile profile={workerProfileDemo} skillCount={workerSkillIds.length} onNavigate={navigate} />
         ) : !isEmployerScreen && destination === 'skills' ? (

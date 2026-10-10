@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { employerRequestScenarios, getDemoQuote, getEmployerRequestsMock, statusLabel } from '../../mocks/employerRequestAdapter'
-import { addMinutesToIso, createEmployerExtensionRequest, formatDemoClock } from '../../mocks/employerLifecycleAdapter'
+import { addMinutesToIso, createEmployerExtensionRequest, employerExtensionScopeKey, formatDemoClock } from '../../mocks/employerLifecycleAdapter'
 import { getEmployerAssignmentView, getEmployerShiftTracking } from '../../mocks/employerLifecycleFixtures'
-import type { EmployerExtensionDuration, EmployerExtensionRequest, EmployerExtensionScenario } from '../../types/employerLifecycle'
+import type { EmployerExtensionDuration, EmployerExtensionScenario, EmployerExtensionSessionState } from '../../types/employerLifecycle'
 import type { AsyncState, EmployerRequestDraft, EmployerWorkRequest, WorkRequestStatus } from '../../types/domain'
 
 const requestStatuses: WorkRequestStatus[] = [
@@ -109,20 +109,81 @@ export function EmployerRequestDetail({
   request,
   onBack,
   onSelectScenario,
+  extensionState: externalExtensionState,
+  onExtensionStateChange,
 }: {
   request: EmployerWorkRequest
   onBack: () => void
   onSelectScenario: (id: string) => void
+  extensionState?: EmployerExtensionSessionState
+  onExtensionStateChange?: (state: EmployerExtensionSessionState) => void
 }) {
   const [matchingScenario, setMatchingScenario] = useState<'progress' | 'awaiting' | 'empty' | 'unavailable'>('progress')
-  const [extensionOpen, setExtensionOpen] = useState(false)
+  const [openExtensionScope, setOpenExtensionScope] = useState<string | null>(null)
   const [extensionDuration, setExtensionDuration] = useState<EmployerExtensionDuration>(30)
   const [extensionScenario, setExtensionScenario] = useState<EmployerExtensionScenario>('submitted')
-  const [extensionRequests, setExtensionRequests] = useState<EmployerExtensionRequest[]>([])
-  const [extensionError, setExtensionError] = useState('')
-  const [latestExtension, setLatestExtension] = useState<EmployerExtensionRequest>()
+  const [localExtensionStates, setLocalExtensionStates] = useState<Record<string, EmployerExtensionSessionState>>({})
+  const extensionTriggerRef = useRef<HTMLButtonElement>(null)
+  const extensionDialogRef = useRef<HTMLElement>(null)
   const e1Assignment = getEmployerAssignmentView(request.id)
   const shift = getEmployerShiftTracking(request.id)
+  const extensionScope = shift ? employerExtensionScopeKey(request.id, shift.shiftId) : `${request.id}::no-shift`
+  const extensionState = externalExtensionState ?? localExtensionStates[extensionScope] ?? {
+    requestId: request.id,
+    assignmentId: shift?.assignmentId ?? e1Assignment?.assignmentId ?? '',
+    shiftId: shift?.shiftId ?? '',
+    requests: [],
+  }
+  const extensionOpen = openExtensionScope === extensionScope
+  const latestExtension = extensionState.requests.at(-1)
+  const extensionError = extensionState.error ?? ''
+
+  function updateExtensionState(next: EmployerExtensionSessionState) {
+    if (onExtensionStateChange) onExtensionStateChange(next)
+    else setLocalExtensionStates((current) => ({ ...current, [extensionScope]: next }))
+  }
+
+  const closeExtensionSheet = useCallback((restoreFocus = true) => {
+    setOpenExtensionScope(null)
+    if (restoreFocus) extensionTriggerRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    if (!extensionOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    extensionDialogRef.current?.querySelector<HTMLElement>('[data-extension-autofocus]')?.focus()
+    function handleModalKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeExtensionSheet()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const dialog = extensionDialogRef.current
+      if (!dialog) return
+      const focusable = [...dialog.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      if (!focusable.length) {
+        event.preventDefault()
+        dialog.focus()
+        return
+      }
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    window.addEventListener('keydown', handleModalKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleModalKeyDown)
+    }
+  }, [extensionOpen, closeExtensionSheet])
   const matchingLabels = {
     progress: ['Đang tìm người làm phù hợp', 'Hệ thống demo đang xử lý theo các đợt. Employer không chọn ứng viên.'],
     awaiting: ['Đang chờ kết quả ghép', 'Chưa có assignment trong fixture hiện tại.'],
@@ -136,15 +197,18 @@ export function EmployerRequestDetail({
   }
   function submitExtension() {
     if (!shift) return
-    const result = createEmployerExtensionRequest(shift, extensionDuration, extensionScenario, extensionRequests)
+    const result = createEmployerExtensionRequest(shift, extensionDuration, extensionScenario, extensionState.requests)
     if (!result.ok) {
-      setExtensionError(result.reason === 'duplicate_pending' ? 'Đã có yêu cầu demo đang chờ cho ca này.' : 'Tình huống này không nhận yêu cầu gia hạn demo.')
+      updateExtensionState({ ...extensionState, error: result.reason === 'duplicate_pending' ? 'Đã có yêu cầu demo đang chờ cho ca này.' : 'Tình huống này không nhận yêu cầu gia hạn demo.' })
       return
     }
-    setExtensionRequests((current) => [...current, result.request])
-    setLatestExtension(result.request)
-    setExtensionError('')
-    setExtensionOpen(false)
+    updateExtensionState({
+      requestId: request.id,
+      assignmentId: shift.assignmentId,
+      shiftId: shift.shiftId,
+      requests: [...extensionState.requests, result.request],
+    })
+    closeExtensionSheet()
   }
   return (
     <main className="employer-page-content lifecycle-page request-detail-page">
@@ -189,8 +253,8 @@ export function EmployerRequestDetail({
         <div className="employer-shift-heading"><div><span className="section-kicker">E15 · E16 · THEO DÕI CA DEMO</span><h2 id="employer-shift-heading">Trạng thái ca</h2></div><span className={`shift-state-pill shift-state-${shift.shiftStatus}`}>{shiftStatusLabel[shift.shiftStatus]}</span></div>
         <div className="shift-schedule-pair"><div><small>Giờ bắt đầu theo lịch</small><strong>{formatDemoClock(shift.scheduledStartAt)}</strong></div><div><small>Kết thúc theo lịch</small><strong>{formatDemoClock(shift.scheduledEndAt)}</strong></div></div>
         <ol className="employer-shift-timeline" aria-label="Tiến trình ca demo">{shift.events.map((item) => <li key={item.id}><span className="shift-event-dot" aria-hidden="true" /><div><strong>{item.label}</strong><time dateTime={item.occurredAt}>{new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(item.occurredAt))}</time><p>{item.note}</p></div></li>)}</ol>
-        {shift.shiftStatus === 'checked_in' && <button className="primary-button extension-open-button" type="button" onClick={() => setExtensionOpen(true)}>Đề nghị gia hạn ca <span aria-hidden="true">→</span></button>}
-        {latestExtension && <div className={`extension-result extension-result-${latestExtension.scenario}`} role="status"><strong>Kết quả gia hạn demo · {latestExtension.scenario}</strong><span>{latestExtension.message}</span><small>Giờ kết thúc gốc: {formatDemoClock(latestExtension.originalEndAt)} · đề xuất: {formatDemoClock(latestExtension.proposedEndAt)}{latestExtension.effectiveEndAt ? ` · hiệu lực demo: ${formatDemoClock(latestExtension.effectiveEndAt)}` : ''}</small></div>}
+        {shift.shiftStatus === 'checked_in' && <button ref={extensionTriggerRef} className="primary-button extension-open-button" type="button" onClick={() => setOpenExtensionScope(extensionScope)}>Đề nghị gia hạn ca <span aria-hidden="true">→</span></button>}
+        {latestExtension && <div className={`extension-result extension-result-${latestExtension.scenario}`} role="status"><strong>Kết quả gia hạn demo · {latestExtension.scenario}</strong><span>{latestExtension.message}</span><small>Mã yêu cầu demo: {latestExtension.id}</small><small>Giờ kết thúc gốc: {formatDemoClock(latestExtension.originalEndAt)} · đề xuất: {formatDemoClock(latestExtension.proposedEndAt)}{latestExtension.effectiveEndAt ? ` · hiệu lực demo: ${formatDemoClock(latestExtension.effectiveEndAt)}` : ''}</small></div>}
         {extensionError && <p className="field-error" role="alert">{extensionError}</p>}
         <p className="extension-disclaimer">Chỉ là dữ liệu demo. Không gửi yêu cầu thật, không thu phí và không đổi ca Worker.</p>
       </section>}
@@ -205,16 +269,17 @@ export function EmployerRequestDetail({
       </select></label>
       <button className="primary-button lifecycle-primary" type="button" onClick={onBack}>Quay về lịch sử <span aria-hidden="true">→</span></button>
       <p className="lifecycle-disclaimer">Các thao tác funding, matching, assignment và hoàn tất không gọi backend.</p>
-      {extensionOpen && shift && <div className="employer-sheet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExtensionOpen(false) }}>
-        <section className="employer-extension-sheet" role="dialog" aria-modal="true" aria-labelledby="extension-sheet-title">
-          <div className="sheet-grabber" aria-hidden="true" /><button type="button" className="sheet-close" aria-label="Đóng" onClick={() => setExtensionOpen(false)}>×</button>
+      {extensionOpen && shift && <div className="employer-sheet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeExtensionSheet() }}>
+        <section ref={extensionDialogRef} className="employer-extension-sheet" role="dialog" aria-modal="true" aria-labelledby="extension-sheet-title" tabIndex={-1}>
+          <div className="sheet-grabber" aria-hidden="true" /><button type="button" className="sheet-close" aria-label="Đóng" data-extension-autofocus onClick={() => closeExtensionSheet()}>×</button>
           <span className="section-kicker">E18 · ĐỀ NGHỊ THỜI GIAN DEMO</span><h2 id="extension-sheet-title">Gia hạn ca làm</h2>
           <p>Giờ kết thúc theo lịch <strong>{formatDemoClock(shift.scheduledEndAt)}</strong></p>
           <fieldset className="extension-options"><legend>Chọn thời lượng thêm</legend>{([30, 60, 120] as const).map((minutes) => <label key={minutes} className={extensionDuration === minutes ? 'is-selected' : ''}><input type="radio" name="extension-duration" value={minutes} checked={extensionDuration === minutes} onChange={() => setExtensionDuration(minutes)} /><span>+{minutes === 30 ? '30 phút' : `${minutes / 60} giờ`}</span></label>)}</fieldset>
           <div className="extension-proposal"><span>Giờ kết thúc đề xuất</span><strong>{formatDemoClock(addMinutesToIso(shift.effectiveEndAt, extensionDuration))}</strong><span>Phí tham khảo demo <b>{formatMoney(({ 30: 25_000, 60: 50_000, 120: 100_000 } as const)[extensionDuration])}</b></span></div>
           <label className="demo-state-field"><span>Kết quả fixture nội bộ</span><select aria-label="Kết quả extension demo" value={extensionScenario} onChange={(event) => setExtensionScenario(event.target.value as EmployerExtensionScenario)}><option value="submitted">Đã gửi (demo)</option><option value="pending">Đang chờ (demo)</option><option value="approved_demo">Được duyệt (demo)</option><option value="rejected_demo">Bị từ chối (demo)</option><option value="unavailable">Không khả dụng</option><option value="expired">Hết hạn</option></select></label>
+          {extensionError && <p className="field-error" role="alert">{extensionError}</p>}
           <p className="extension-disclaimer">Không phải báo giá production. Gửi lựa chọn không tự động đổi lịch; chỉ fixture “Được duyệt (demo)” hiển thị giờ hiệu lực minh họa.</p>
-          <div className="sheet-actions"><button className="secondary-action" type="button" onClick={() => setExtensionOpen(false)}>Để sau</button><button className="primary-button" type="button" onClick={submitExtension}>Gửi đề nghị demo</button></div>
+          <div className="sheet-actions"><button className="secondary-action" type="button" onClick={() => closeExtensionSheet()}>Để sau</button><button className="primary-button" type="button" onClick={submitExtension}>Gửi đề nghị demo</button></div>
         </section>
       </div>}
     </main>
