@@ -20,12 +20,13 @@ export const navigationByContext: Record<UiContext, { id: Destination; label: st
 
 export function isDestinationForContext(context: UiContext, destination: Destination) {
   if (navigationByContext[context].some((item) => item.id === destination)) return true
+  if (['communicationChat', 'communicationCall', 'completion', 'review', 'incident', 'dispute'].includes(destination)) return true
   return context === 'worker' && ['opportunities', 'opportunityDetail', 'shiftDetail', 'transactionDetail', 'skills', 'readiness', 'area'].includes(destination)
 }
 
 export function destinationLabel(context: UiContext, destination: Destination) {
   const labels: Partial<Record<Destination, string>> = {
-    opportunities: 'Việc mới', opportunityDetail: 'Chi tiết việc', shiftDetail: 'Chi tiết ca làm', transactionDetail: 'Chi tiết giao dịch', skills: 'Kỹ năng', readiness: 'Lịch rảnh', area: 'Khu vực làm việc',
+    opportunities: 'Việc mới', opportunityDetail: 'Chi tiết việc', shiftDetail: 'Chi tiết ca làm', transactionDetail: 'Chi tiết giao dịch', skills: 'Kỹ năng', readiness: 'Lịch rảnh', area: 'Khu vực làm việc', communicationChat: 'Tin nhắn demo', communicationCall: 'Cuộc gọi demo', completion: 'Xác nhận hoàn tất', review: 'Đánh giá', incident: 'Báo cáo sự cố', dispute: 'Hồ sơ hỗ trợ',
   }
   return navigationByContext[context].find((item) => item.id === destination)?.label ?? labels[destination] ?? 'Trang chủ'
 }
