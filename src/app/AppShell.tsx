@@ -17,6 +17,14 @@ import { WorkerSchedule } from '../features/worker/WorkerSchedule'
 import { WorkerShiftDetail } from '../features/worker/WorkerShiftDetail'
 import { WorkerSkills } from '../features/worker/WorkerSkills'
 import { WorkerTransactionDetail, WorkerWallet } from '../features/worker/WorkerWallet'
+import { ConversationScreen } from '../features/shared/ConversationScreen'
+import { DemoCallScreen } from '../features/shared/DemoCallScreen'
+import { EmployerE2Screen } from '../features/employer/EmployerE2Screens'
+import { demoConversationLinks, demoMessagesByConversation } from '../mocks/jobfreeCommunicationsFixtures'
+import { employerReviewFixtures } from '../mocks/employerCompletionFixtures'
+import { createCompletionDecision, submitEmployerIncident, submitEmployerReview } from '../mocks/employerCompletionAdapter'
+import type { EmployerCompletionDecision, EmployerDisputeCase, EmployerIncident, EmployerReview } from '../types/employerCompletion'
+import type { DemoConversationLink, DemoMessage } from '../types/jobfreeCommunications'
 import { emptyEmployerRequestDraft, workerProfileDemo, workerSavedSkillIds } from '../mocks/fixtures'
 import { createDraftRequest, employerRequestScenarios, getEmployerRequestById } from '../mocks/employerRequestAdapter'
 import { employerExtensionScopeKey } from '../mocks/employerLifecycleAdapter'
@@ -47,11 +55,20 @@ export function AppShell() {
   const [selectedTransactionId, setSelectedTransactionId] = useState<string>()
   const [newJobModalOpen, setNewJobModalOpen] = useState(false)
   const [modalDecisionMessage, setModalDecisionMessage] = useState('')
+  const [selectedConversationId, setSelectedConversationId] = useState<string>()
+  const [communicationBackDestination, setCommunicationBackDestination] = useState<Destination>('requestDetail')
+  const [demoMessages, setDemoMessages] = useState<Record<string, DemoMessage[]>>(() => Object.fromEntries(Object.entries(demoMessagesByConversation).map(([id, messages]) => [id, [...messages]])))
+  const [completionDecisions, setCompletionDecisions] = useState<Record<string, EmployerCompletionDecision>>({})
+  const [employerReviews, setEmployerReviews] = useState<EmployerReview[]>(employerReviewFixtures)
+  const [employerIncidents, setEmployerIncidents] = useState<EmployerIncident[]>([])
+  const [employerDisputes, setEmployerDisputes] = useState<EmployerDisputeCase[]>([])
 
   function changeContext(nextContext: UiContext) {
     setContext(nextContext)
     setDestination('home')
     setNewJobModalOpen(false)
+    setSelectedConversationId(undefined)
+    setCommunicationBackDestination('requestDetail')
   }
 
   function navigate(nextDestination: Destination) {
@@ -81,6 +98,23 @@ export function AppShell() {
     setDestination('requestDetail')
   }
 
+  function openConversation(link: DemoConversationLink, route: 'communicationChat' | 'communicationCall') {
+    setSelectedConversationId(link.conversationId)
+    setCommunicationBackDestination(context === 'employer' ? 'requestDetail' : 'shiftDetail')
+    setDestination(route)
+  }
+
+  function openWorkerJobContact(link: DemoConversationLink, route: 'communicationChat' | 'communicationCall') {
+    setSelectedShiftId(link.shiftId)
+    setShiftReturnDestination('jobs')
+    openConversation(link, route)
+  }
+
+  const getWorkerContactLink = (shiftId: string) => {
+    const assignment = workerAssignments.find((item) => item.shiftId === shiftId)
+    return assignment ? demoConversationLinks.find((link) => link.role === 'worker' && link.assignmentId === assignment.id && link.shiftId === shiftId) : undefined
+  }
+
   function selectRequestScenario(requestId: string) {
     setSelectedRequestId(requestId)
   }
@@ -91,6 +125,7 @@ export function AppShell() {
   const modalOffer = workerOffers[0]
   const selectedShift = workerShifts.find((shift) => shift.id === selectedShiftId)
   const selectedTransaction = workerTransactions.find((transaction) => transaction.id === selectedTransactionId)
+  const selectedConversation = demoConversationLinks.find((item) => item.conversationId === selectedConversationId && item.role === context)
 
   function handleOfferDecision(offerId: string, decision: 'accept' | 'decline', scenario: WorkerDecisionScenario): WorkerOfferDecisionResult {
     const offer = workerOffers.find((item) => item.id === offerId)
@@ -117,6 +152,7 @@ export function AppShell() {
   const isHome = destination === 'home'
   const isEmployerScreen = context === 'employer'
   const selectedRequest = getEmployerRequestById(selectedRequestId, localDraftRequest)
+  const selectedCompletion = selectedRequest ? completionDecisions[selectedRequest.id] : undefined
   const selectedEmployerShift = selectedRequest ? getEmployerShiftTracking(selectedRequest.id) : undefined
   const selectedExtensionScope = selectedEmployerShift ? employerExtensionScopeKey(selectedEmployerShift.requestId, selectedEmployerShift.shiftId) : undefined
   const employerRequests = localDraftRequest ? [localDraftRequest, ...employerRequestScenarios] : employerRequestScenarios
@@ -147,6 +183,12 @@ export function AppShell() {
             }}
             onBack={() => setDestination('history')}
             onSelectScenario={selectRequestScenario}
+            onOpenChat={() => { const link = demoConversationLinks.find((item) => item.role === 'employer' && item.requestId === selectedRequest.id && item.assignmentStatus === 'active'); if (link) openConversation(link, 'communicationChat') }}
+            onOpenCall={() => { const link = demoConversationLinks.find((item) => item.role === 'employer' && item.requestId === selectedRequest.id && item.assignmentStatus === 'active'); if (link) openConversation(link, 'communicationCall') }}
+            onOpenCompletion={() => setDestination('completion')}
+            onOpenReview={() => setDestination('review')}
+            onOpenIncident={() => setDestination('incident')}
+            onOpenDispute={() => setDestination('dispute')}
           />
         ) : !isEmployerScreen && destination === 'account' ? (
           <WorkerProfile profile={workerProfileDemo} skillCount={workerSkillIds.length} onNavigate={navigate} />
@@ -159,15 +201,21 @@ export function AppShell() {
         ) : !isEmployerScreen && destination === 'opportunityDetail' && selectedOffer ? (
           <WorkerOfferDetail offer={selectedOffer} status={workerOfferStatuses[selectedOffer.id]} onBack={() => setDestination('opportunities')} onDecision={(decision, scenario) => handleOfferDecision(selectedOffer.id, decision, scenario)} onAccepted={() => setDestination('jobs')} />
         ) : !isEmployerScreen && destination === 'jobs' ? (
-          <WorkerJobs jobs={workerJobs} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} />
+          <WorkerJobs jobs={workerJobs} getContactLink={getWorkerContactLink} onOpenChat={(link) => openWorkerJobContact(link, 'communicationChat')} onOpenCall={(link) => openWorkerJobContact(link, 'communicationCall')} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} />
         ) : !isEmployerScreen && destination === 'schedule' ? (
           <WorkerSchedule shifts={workerShifts} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('schedule'); setDestination('shiftDetail') }} />
         ) : !isEmployerScreen && destination === 'shiftDetail' && selectedShift ? (
-          <WorkerShiftDetail shift={selectedShift} onBack={() => setDestination(shiftReturnDestination)} onTransition={changeShiftStatus} />
+          <WorkerShiftDetail shift={selectedShift} contactLink={getWorkerContactLink(selectedShift.id)} onOpenChat={(link) => openConversation(link, 'communicationChat')} onOpenCall={(link) => openConversation(link, 'communicationCall')} onBack={() => setDestination(shiftReturnDestination)} onTransition={changeShiftStatus} />
         ) : !isEmployerScreen && destination === 'wallet' ? (
           <WorkerWallet transactions={workerTransactions} onOpenTransaction={(id) => { setSelectedTransactionId(id); setDestination('transactionDetail') }} />
         ) : !isEmployerScreen && destination === 'transactionDetail' && selectedTransaction ? (
           <WorkerTransactionDetail transaction={selectedTransaction} onBack={() => setDestination('wallet')} />
+        ) : destination === 'communicationChat' ? (
+          <ConversationScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} messages={selectedConversation ? (demoMessages[selectedConversation.conversationId] ?? []) : []} onMessagesChange={(messages) => { if (selectedConversation) setDemoMessages((current) => ({ ...current, [selectedConversation.conversationId]: messages })) }} onBack={() => setDestination(communicationBackDestination)} onCall={() => selectedConversation && openConversation(selectedConversation, 'communicationCall')} />
+        ) : destination === 'communicationCall' ? (
+          <DemoCallScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} onBack={() => setDestination(communicationBackDestination)} />
+        ) : isEmployerScreen && ['completion', 'review', 'incident', 'dispute'].includes(destination) ? (
+          <EmployerE2Screen screen={destination as 'completion' | 'review' | 'incident' | 'dispute'} request={selectedRequest} completion={selectedCompletion} onCompletion={(value) => { const decision = createCompletionDecision(value.requestId, value.assignmentId, value.shiftId, value.status as 'confirmed_demo' | 'issue_reported_demo', completionDecisions[value.requestId]); if (decision) setCompletionDecisions((current) => ({ ...current, [decision.requestId]: decision })) }} reviews={employerReviews} onReview={(value) => { const review = submitEmployerReview(value, employerReviews); if (review) setEmployerReviews((current) => current.some((item) => item.requestId === review.requestId && item.assignmentId === review.assignmentId) ? current : [...current, review]) }} incidents={employerIncidents} onIncident={(incident) => { const result = submitEmployerIncident({ requestId: incident.requestId, assignmentId: incident.assignmentId, category: incident.category, description: incident.description, evidenceLabel: incident.evidenceLabel }, employerIncidents, employerDisputes); setEmployerIncidents((current) => current.some((item) => item.id === result.incident.id) ? current : [...current, result.incident]); setEmployerDisputes((current) => current.some((item) => item.id === result.dispute.id) ? current : [...current, result.dispute]); setDestination('dispute') }} disputes={employerDisputes} onDispute={(value) => setEmployerDisputes((current) => current.some((item) => item.id === value.id) ? current.map((item) => item.id === value.id ? value : item) : [...current, value])} onBack={() => setDestination('requestDetail')} />
         ) : (
           <main className="placeholder-content">
             <span className="placeholder-icon" aria-hidden="true">{['services', 'jobs', 'schedule', 'wallet'].includes(destination) ? '▦' : '⌂'}</span>

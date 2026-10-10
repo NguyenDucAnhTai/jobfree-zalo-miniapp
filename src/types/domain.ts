@@ -20,6 +20,12 @@ export type Destination =
   | 'skills'
   | 'readiness'
   | 'area'
+  | 'communicationChat'
+  | 'communicationCall'
+  | 'completion'
+  | 'review'
+  | 'incident'
+  | 'dispute'
 
 export type WorkRequestStatus =
   | 'draft'

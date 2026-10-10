@@ -4,6 +4,7 @@ import { addMinutesToIso, createEmployerExtensionRequest, employerExtensionScope
 import { getEmployerAssignmentView, getEmployerShiftTracking } from '../../mocks/employerLifecycleFixtures'
 import type { EmployerExtensionDuration, EmployerExtensionScenario, EmployerExtensionSessionState } from '../../types/employerLifecycle'
 import type { AsyncState, EmployerRequestDraft, EmployerWorkRequest, WorkRequestStatus } from '../../types/domain'
+import { ContactActions } from '../shared/ConversationScreen'
 
 const requestStatuses: WorkRequestStatus[] = [
   'draft',
@@ -111,12 +112,24 @@ export function EmployerRequestDetail({
   onSelectScenario,
   extensionState: externalExtensionState,
   onExtensionStateChange,
+  onOpenChat,
+  onOpenCall,
+  onOpenCompletion,
+  onOpenReview,
+  onOpenIncident,
+  onOpenDispute,
 }: {
   request: EmployerWorkRequest
   onBack: () => void
   onSelectScenario: (id: string) => void
   extensionState?: EmployerExtensionSessionState
   onExtensionStateChange?: (state: EmployerExtensionSessionState) => void
+  onOpenChat?: () => void
+  onOpenCall?: () => void
+  onOpenCompletion?: () => void
+  onOpenReview?: () => void
+  onOpenIncident?: () => void
+  onOpenDispute?: () => void
 }) {
   const [matchingScenario, setMatchingScenario] = useState<'progress' | 'awaiting' | 'empty' | 'unavailable'>('progress')
   const [openExtensionScope, setOpenExtensionScope] = useState<string | null>(null)
@@ -248,6 +261,7 @@ export function EmployerRequestDetail({
           <span className="assignment-status">{request.assignment.status === 'active' ? 'Đang phân công demo' : request.assignment.status === 'replaced' ? 'Worker cũ · đã thay thế' : 'Assignment đã hủy'}</span>
         </div> : <div className="assignment-empty" role="status"><strong>Chưa có người làm</strong><span>Frontend chỉ hiển thị kết quả mock; Employer không chọn ứng viên.</span></div>}
         {request.assignment?.shiftSchedule && request.status !== 'replacement_matching' && <p className="assignment-shift">Ca làm demo: {request.assignment.shiftSchedule}</p>}
+        {e1Assignment?.status === 'active' && onOpenChat && onOpenCall && <ContactActions onChat={onOpenChat} onCall={onOpenCall} />}
       </section>
       {shift && e1Assignment?.status === 'active' && <section className="employer-shift-card" aria-labelledby="employer-shift-heading">
         <div className="employer-shift-heading"><div><span className="section-kicker">E15 · E16 · THEO DÕI CA DEMO</span><h2 id="employer-shift-heading">Trạng thái ca</h2></div><span className={`shift-state-pill shift-state-${shift.shiftStatus}`}>{shiftStatusLabel[shift.shiftStatus]}</span></div>
@@ -258,6 +272,7 @@ export function EmployerRequestDetail({
         {extensionError && <p className="field-error" role="alert">{extensionError}</p>}
         <p className="extension-disclaimer">Chỉ là dữ liệu demo. Không gửi yêu cầu thật, không thu phí và không đổi ca Worker.</p>
       </section>}
+      {e1Assignment?.status === 'active' && <section className="e2-actions" aria-label="Hỗ trợ và hoàn tất demo"><span className="section-kicker">E19–E26 · CÁC LUỒNG DEMO</span><div>{shift?.shiftStatus === 'pending_confirmation' && <button type="button" onClick={onOpenCompletion}>Tóm tắt & xác nhận hoàn tất</button>}{(request.status === 'completed' || shift?.shiftStatus === 'pending_confirmation') && <button type="button" onClick={onOpenReview}>Đánh giá demo</button>}<button type="button" onClick={onOpenIncident}>Báo cáo vấn đề</button><button type="button" onClick={onOpenDispute}>Hồ sơ hỗ trợ</button></div></section>}
       <section className="request-timeline" aria-labelledby="timeline-heading"><span className="section-kicker">THEO DÕI DEMO</span><h2 id="timeline-heading">Tiến trình yêu cầu</h2>
         <ol>{request.timeline.map((item) => <li className={item.completed ? 'is-complete' : 'is-pending'} key={item.id}>
           <span className="timeline-marker" aria-hidden="true">{item.completed ? '✓' : '·'}</span><div><strong>{item.label}</strong><time>{item.occurredAt}</time><p>{item.note}</p></div>
