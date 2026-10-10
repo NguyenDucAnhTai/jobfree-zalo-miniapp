@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { AsyncStateView } from '../components/AsyncStateView'
 import { BottomNavigation } from '../components/BottomNavigation'
 import { RoleSwitcher } from '../components/RoleSwitcher'
@@ -23,6 +23,7 @@ import { EmployerE2Screen } from '../features/employer/EmployerE2Screens'
 import { demoConversationLinks, demoMessagesByConversation } from '../mocks/jobfreeCommunicationsFixtures'
 import { employerReviewFixtures } from '../mocks/employerCompletionFixtures'
 import { createCompletionDecision, submitEmployerIncident, submitEmployerReview } from '../mocks/employerCompletionAdapter'
+import { resolveDemoCommunicationAuthorization } from '../mocks/jobfreeCommunicationsAdapter'
 import type { EmployerCompletionDecision, EmployerDisputeCase, EmployerIncident, EmployerReview } from '../types/employerCompletion'
 import type { DemoConversationLink, DemoMessage } from '../types/jobfreeCommunications'
 import { emptyEmployerRequestDraft, workerProfileDemo, workerSavedSkillIds } from '../mocks/fixtures'
@@ -126,6 +127,17 @@ export function AppShell() {
   const selectedShift = workerShifts.find((shift) => shift.id === selectedShiftId)
   const selectedTransaction = workerTransactions.find((transaction) => transaction.id === selectedTransactionId)
   const selectedConversation = demoConversationLinks.find((item) => item.conversationId === selectedConversationId && item.role === context)
+  const resolveSelectedCommunication = useCallback((link: DemoConversationLink, action: 'chat' | 'send_message' | 'call') => resolveDemoCommunicationAuthorization({
+    role: context,
+    requestId: link.requestId,
+    jobId: link.jobId,
+    assignmentId: link.assignmentId,
+    shiftId: link.shiftId,
+    conversationId: link.conversationId,
+    action,
+    workerAssignments,
+    workerShifts,
+  }), [context, workerAssignments, workerShifts])
 
   function handleOfferDecision(offerId: string, decision: 'accept' | 'decline', scenario: WorkerDecisionScenario): WorkerOfferDecisionResult {
     const offer = workerOffers.find((item) => item.id === offerId)
@@ -211,11 +223,11 @@ export function AppShell() {
         ) : !isEmployerScreen && destination === 'transactionDetail' && selectedTransaction ? (
           <WorkerTransactionDetail transaction={selectedTransaction} onBack={() => setDestination('wallet')} />
         ) : destination === 'communicationChat' ? (
-          <ConversationScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} messages={selectedConversation ? (demoMessages[selectedConversation.conversationId] ?? []) : []} onMessagesChange={(messages) => { if (selectedConversation) setDemoMessages((current) => ({ ...current, [selectedConversation.conversationId]: messages })) }} onBack={() => setDestination(communicationBackDestination)} onCall={() => selectedConversation && openConversation(selectedConversation, 'communicationCall')} />
+          <ConversationScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} messages={selectedConversation ? (demoMessages[selectedConversation.conversationId] ?? []) : []} onMessagesChange={(messages) => { if (selectedConversation) setDemoMessages((current) => ({ ...current, [selectedConversation.conversationId]: messages })) }} onBack={() => setDestination(communicationBackDestination)} onCall={() => selectedConversation && openConversation(selectedConversation, 'communicationCall')} authorize={(action) => selectedConversation ? resolveSelectedCommunication(selectedConversation, action) : { allowed: false, readOnly: false, currentAssignmentStatus: 'none', reason: 'Không có hội thoại hợp lệ.' }} />
         ) : destination === 'communicationCall' ? (
-          <DemoCallScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} onBack={() => setDestination(communicationBackDestination)} />
+          <DemoCallScreen key={`${context}-${selectedConversationId ?? 'none'}`} link={selectedConversation} role={context} onBack={() => setDestination(communicationBackDestination)} authorize={() => selectedConversation ? resolveSelectedCommunication(selectedConversation, 'call') : { allowed: false, readOnly: false, currentAssignmentStatus: 'none', reason: 'Không có assignment hợp lệ.' }} />
         ) : isEmployerScreen && ['completion', 'review', 'incident', 'dispute'].includes(destination) ? (
-          <EmployerE2Screen screen={destination as 'completion' | 'review' | 'incident' | 'dispute'} request={selectedRequest} completion={selectedCompletion} onCompletion={(value) => { const decision = createCompletionDecision(value.requestId, value.assignmentId, value.shiftId, value.status as 'confirmed_demo' | 'issue_reported_demo', completionDecisions[value.requestId]); if (decision) setCompletionDecisions((current) => ({ ...current, [decision.requestId]: decision })) }} reviews={employerReviews} onReview={(value) => { const review = submitEmployerReview(value, employerReviews); if (review) setEmployerReviews((current) => current.some((item) => item.requestId === review.requestId && item.assignmentId === review.assignmentId) ? current : [...current, review]) }} incidents={employerIncidents} onIncident={(incident) => { const result = submitEmployerIncident({ requestId: incident.requestId, assignmentId: incident.assignmentId, category: incident.category, description: incident.description, evidenceLabel: incident.evidenceLabel }, employerIncidents, employerDisputes); setEmployerIncidents((current) => current.some((item) => item.id === result.incident.id) ? current : [...current, result.incident]); setEmployerDisputes((current) => current.some((item) => item.id === result.dispute.id) ? current : [...current, result.dispute]); setDestination('dispute') }} disputes={employerDisputes} onDispute={(value) => setEmployerDisputes((current) => current.some((item) => item.id === value.id) ? current.map((item) => item.id === value.id ? value : item) : [...current, value])} onBack={() => setDestination('requestDetail')} />
+          <EmployerE2Screen screen={destination as 'completion' | 'review' | 'incident' | 'dispute'} request={selectedRequest} completion={selectedCompletion} onCompletion={(value) => { const decision = createCompletionDecision(value.requestId, value.assignmentId, value.shiftId, value.status as 'confirmed_demo' | 'issue_reported_demo', completionDecisions[value.requestId]); if (decision) setCompletionDecisions((current) => ({ ...current, [decision.requestId]: decision })) }} reviews={employerReviews} onReview={(value) => { const review = submitEmployerReview(value, employerReviews); if (review) setEmployerReviews((current) => current.some((item) => item.requestId === review.requestId && item.assignmentId === review.assignmentId) ? current : [...current, review]) }} incidents={employerIncidents} onIncident={(incident) => { const result = submitEmployerIncident({ requestId: incident.requestId, assignmentId: incident.assignmentId, category: incident.category, description: incident.description, evidenceLabel: incident.evidenceLabel }, employerIncidents, employerDisputes); setEmployerIncidents((current) => current.some((item) => item.id === result.incident.id) ? current : [...current, result.incident]); setEmployerDisputes((current) => current.some((item) => item.id === result.dispute.id) ? current : [...current, result.dispute]); setDestination('dispute') }} disputes={employerDisputes} onDispute={(value) => setEmployerDisputes((current) => current.some((item) => item.id === value.id) ? current.map((item) => item.id === value.id ? value : item) : [...current, value])} onBack={() => setDestination('requestDetail')} onOpenReview={() => setDestination('review')} />
         ) : (
           <main className="placeholder-content">
             <span className="placeholder-icon" aria-hidden="true">{['services', 'jobs', 'schedule', 'wallet'].includes(destination) ? '▦' : '⌂'}</span>

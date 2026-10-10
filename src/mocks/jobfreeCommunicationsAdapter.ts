@@ -1,14 +1,62 @@
-import type { DemoAssignmentStatus, DemoConversationLink, DemoMessage } from '../types/jobfreeCommunications'
+import type { DemoAssignmentStatus, DemoMessage } from '../types/jobfreeCommunications'
 import type { UiContext } from '../types/domain'
+import type { EmployerAssignmentView, EmployerShiftTracking } from '../types/employerLifecycle'
+import type { WorkerAssignment, WorkerShift } from '../types/workerLifecycle'
+import { employerAssignmentViews, employerShiftTrackingFixtures } from './employerLifecycleFixtures'
+import { demoConversationLinks } from './jobfreeCommunicationsFixtures'
 
-export function authorizeDemoCommunication(input: { role: UiContext; conversationRole: UiContext; requestId: string; jobId: string; assignmentId?: string; assignmentStatus: DemoAssignmentStatus; scenario: DemoConversationLink['scenario']; action: 'chat' | 'call' }): { allowed: boolean; readOnly: boolean; reason: string } {
-  if (!input.assignmentId || input.assignmentStatus === 'none') return { allowed: false, readOnly: false, reason: 'Chưa có assignment hợp lệ.' }
-  if (input.role !== input.conversationRole) return { allowed: false, readOnly: false, reason: 'Cuộc hội thoại thuộc ngữ cảnh demo khác.' }
-  if (input.assignmentStatus === 'replaced' || input.assignmentStatus === 'cancelled' || input.scenario === 'blocked' || input.scenario === 'unavailable') return { allowed: false, readOnly: false, reason: 'Kênh liên hệ demo hiện không khả dụng cho trạng thái assignment này.' }
-  if (input.role !== 'employer' && input.role !== 'worker') return { allowed: false, readOnly: false, reason: 'Ngữ cảnh demo không hợp lệ.' }
-  if (!input.requestId || !input.jobId) return { allowed: false, readOnly: false, reason: 'Thiếu liên kết công việc demo.' }
-  if (input.assignmentStatus === 'completed' || input.scenario === 'read_only') return { allowed: input.action === 'chat', readOnly: true, reason: input.action === 'chat' ? 'Lịch sử hội thoại chỉ đọc sau khi hoàn tất.' : 'Cuộc gọi không khả dụng với công việc đã hoàn tất.' }
-  return { allowed: true, readOnly: false, reason: 'Kênh liên hệ demo được mở theo assignment.' }
+export type CommunicationAction = 'chat' | 'send_message' | 'call'
+export interface CommunicationAuthorizationInput {
+  role: UiContext
+  requestId: string
+  jobId: string
+  assignmentId: string
+  shiftId: string
+  conversationId: string
+  action: CommunicationAction
+  workerAssignments?: WorkerAssignment[]
+  workerShifts?: WorkerShift[]
+  employerAssignments?: EmployerAssignmentView[]
+  employerShifts?: EmployerShiftTracking[]
+}
+export interface CommunicationAuthorization {
+  allowed: boolean
+  readOnly: boolean
+  currentAssignmentStatus: DemoAssignmentStatus
+  reason: string
+}
+
+/** Pure resolver: fixture metadata validates the complete ID tuple, while live AppShell read models determine current authority. */
+export function resolveDemoCommunicationAuthorization(input: CommunicationAuthorizationInput): CommunicationAuthorization {
+  const denied = (reason: string, currentAssignmentStatus: DemoAssignmentStatus = 'none'): CommunicationAuthorization => ({ allowed: false, readOnly: false, currentAssignmentStatus, reason })
+  const canonical = demoConversationLinks.find((item) => item.conversationId === input.conversationId)
+  if (!canonical || canonical.role !== input.role || canonical.requestId !== input.requestId || canonical.jobId !== input.jobId || canonical.assignmentId !== input.assignmentId || canonical.shiftId !== input.shiftId) return denied('Liên kết request/job/assignment/shift/conversation không hợp lệ.')
+
+  let currentStatus: DemoAssignmentStatus
+  if (input.role === 'employer') {
+    const assignments = input.employerAssignments ?? employerAssignmentViews
+    const shifts = input.employerShifts ?? employerShiftTrackingFixtures
+    const assignment = assignments.find((item) => item.requestId === input.requestId)
+    if (!assignment || assignment.assignmentId !== input.assignmentId || assignment.shiftId !== input.shiftId) return denied('Không tìm thấy assignment Employer đang hiệu lực.')
+    const shift = shifts.find((item) => item.requestId === input.requestId)
+    if (!shift || shift.assignmentId !== input.assignmentId || shift.shiftId !== input.shiftId) return denied('Shift Employer không khớp assignment hiện tại.')
+    currentStatus = shift.shiftStatus === 'completed' ? 'completed' : shift.shiftStatus === 'cancelled' ? 'cancelled' : assignment.status
+  } else {
+    const assignments = input.workerAssignments ?? []
+    const shifts = input.workerShifts ?? []
+    const assignment = assignments.find((item) => item.id === input.assignmentId)
+    if (!assignment || assignment.jobId !== input.jobId || assignment.shiftId !== input.shiftId) return denied('Không tìm thấy assignment Worker đang hiệu lực.')
+    const shift = shifts.find((item) => item.id === input.shiftId)
+    if (!shift || shift.jobId !== input.jobId || shift.id !== assignment.shiftId) return denied('Shift Worker không khớp assignment hiện tại.')
+    currentStatus = shift.status === 'completed' ? 'completed' : shift.status === 'cancelled' ? 'cancelled' : assignment.status
+  }
+
+  if (canonical.scenario === 'blocked' || canonical.scenario === 'unavailable' || currentStatus === 'replaced' || currentStatus === 'cancelled') return denied('Kênh liên hệ demo không khả dụng với assignment hiện tại.', currentStatus)
+  if (currentStatus === 'completed') {
+    if (input.action === 'chat') return { allowed: true, readOnly: true, currentAssignmentStatus: currentStatus, reason: 'Lịch sử hội thoại chỉ đọc sau khi hoàn tất.' }
+    return denied(input.action === 'call' ? 'Cuộc gọi không khả dụng với công việc đã hoàn tất.' : 'Không thể gửi tin mới sau khi công việc hoàn tất.', currentStatus)
+  }
+  return { allowed: true, readOnly: false, currentAssignmentStatus: 'active', reason: 'Kênh liên hệ demo được mở theo assignment hiện tại.' }
 }
 
 export function appendDemoMessage(messages: DemoMessage[], role: UiContext, text: string, conversationId: string): DemoMessage[] {
