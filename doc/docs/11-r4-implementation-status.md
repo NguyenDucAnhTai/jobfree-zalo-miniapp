@@ -21,11 +21,11 @@
 
 ## Validation
 
-- Typecheck: PASS — `node_modules/.bin/tsc -b --pretty false`.
+- Typecheck: PASS — `npm run typecheck`.
 - Build: PASS — `node_modules/.bin/vite build`; Vite 8.3.4 emitted `dist/assets/index-67atCP0O.css` and the production JS asset.
 - CSS: PASS — `App.css` is imported once and emitted by the build.
-- Lint: NOT VERIFIED — `npm run lint` / direct ESLint invocation stalled without diagnostics in this Windows/OneDrive workspace.
-- Tests: NOT VERIFIED — Vitest stalled during worker startup (including a single-worker retry); the new source tests cover selected-ID detail navigation/back, Employer isolation, fixture-derived count, and empty fixture but did not finish executing in this iteration.
+- Lint: PASS — `npm run lint`.
+- Tests: PASS — `npm run test`; 7 files / 32 tests. Added coverage for selected-ID Worker Home detail navigation/back, Employer isolation, fixture-derived count, and empty fixture.
 - Employer visual viewport: NOT VERIFIED — no rendered screenshot captured at 393×852.
 - Worker visual viewport: NOT VERIFIED — no rendered screenshot captured at 402×874.
 - Zalo runtime: NOT VERIFIED — no Zalo Mini App runtime was available.
@@ -34,5 +34,5 @@
 
 - Static PNG exports do not provide verified prototype routes, component metadata, or a dedicated opportunities listing frame.
 - Demo profile and availability state are in-memory only. No real OTP, VNeID, eKYC, payment, dispatch, geolocation, job acceptance, or production API integration exists.
-- Iteration 2 lint and test processes did not complete in the current environment; rerun them in a stable local checkout before treating these additions as validated.
+- Initial sandboxed Vitest attempts hit Windows temporary-file `EPERM`; rerunning validation with approved access to the temp directory completed successfully.
 - No PR or merge is part of this implementation status; R4 must receive independent review first.
