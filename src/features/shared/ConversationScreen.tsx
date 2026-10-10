@@ -5,7 +5,13 @@ import { appendDemoMessage, type CommunicationAuthorization } from '../../mocks/
 
 const quickMessages = ['Tôi đang chờ tại địa điểm.', 'Bạn có thể xác nhận thời gian không?', 'Tôi cần trao đổi thêm về công việc.']
 function Icon({ kind }: { kind: 'phone' | 'message' }) { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'phone' ? 'M7 3h3l2 5-2 1.5a14 14 0 0 0 4.5 4.5L16 12l5 2v3c0 1.1-.9 2-2 2C10.7 19 5 13.3 5 5c0-1.1.9-2 2-2Z' : 'M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-5 4v-4.5a2.5 2.5 0 0 1-1-2Z'} /></svg> }
-export function ContactActions({ onChat, onCall, label = 'Liên hệ demo theo assignment' }: { onChat: () => void; onCall: () => void; label?: string }) { return <div className="demo-contact-actions" aria-label={label}><button type="button" onClick={onCall}><Icon kind="phone" />Gọi</button><button type="button" onClick={onChat}><Icon kind="message" />Nhắn tin</button><small>Liên hệ demo · không gọi hoặc gửi tin thật</small></div> }
+export function ContactActions({ onChat, onCall, label = 'Liên hệ demo theo assignment', variant = 'default', mode = 'active', helperText }: { onChat: () => void; onCall: () => void; label?: string; variant?: 'default' | 'worker'; mode?: 'active' | 'readOnly' | 'disabled'; helperText?: string }) {
+  if (variant === 'worker') return <section className={`demo-contact-actions worker-contact-actions state-${mode}`} aria-label={label}>
+    {mode === 'active' ? <div className="worker-contact-grid"><button type="button" onClick={onCall}><Icon kind="phone" />Gọi</button><button type="button" onClick={onChat}><Icon kind="message" />Nhắn tin</button></div> : mode === 'readOnly' ? <button className="worker-contact-readonly" type="button" onClick={onChat}><Icon kind="message" />Xem tin nhắn</button> : <p className="worker-contact-unavailable" role="note">Liên hệ không khả dụng · {helperText ?? 'Không có assignment hợp lệ trong demo.'}</p>}
+    <small>{helperText ?? (mode === 'readOnly' ? 'Công việc đã kết thúc; chỉ xem được lịch sử demo.' : 'Liên hệ demo · không gọi hoặc gửi tin thật')}</small>
+  </section>
+  return <div className="demo-contact-actions" aria-label={label}><button type="button" onClick={onCall}><Icon kind="phone" />Gọi</button><button type="button" onClick={onChat}><Icon kind="message" />Nhắn tin</button><small>Liên hệ demo · không gọi hoặc gửi tin thật</small></div>
+}
 
 export function ConversationScreen({ link, role, messages, onMessagesChange, onBack, onCall, authorize }: { link?: DemoConversationLink; role: UiContext; messages: DemoMessage[]; onMessagesChange: (messages: DemoMessage[]) => void; onBack: () => void; onCall: () => void; authorize: (action: 'chat' | 'send_message') => CommunicationAuthorization }) {
   const [draft, setDraft] = useState('')

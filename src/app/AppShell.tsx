@@ -106,9 +106,16 @@ export function AppShell() {
   }
 
   function openWorkerJobContact(link: DemoConversationLink, route: 'communicationChat' | 'communicationCall') {
+    const action = route === 'communicationCall' ? 'call' : 'chat'
+    const authorization = getWorkerContactAuthorization(link, action)
+    if (!authorization.allowed || (action === 'call' && authorization.currentAssignmentStatus !== 'active')) return
     setSelectedShiftId(link.shiftId)
     setShiftReturnDestination('jobs')
     openConversation(link, route)
+  }
+
+  function getWorkerContactAuthorization(link: DemoConversationLink, action: 'chat' | 'send_message' | 'call') {
+    return resolveDemoCommunicationAuthorization({ role: 'worker', requestId: link.requestId, jobId: link.jobId, assignmentId: link.assignmentId, shiftId: link.shiftId, conversationId: link.conversationId, action, workerAssignments, workerShifts })
   }
 
   const getWorkerContactLink = (shiftId: string) => {
@@ -213,11 +220,11 @@ export function AppShell() {
         ) : !isEmployerScreen && destination === 'opportunityDetail' && selectedOffer ? (
           <WorkerOfferDetail offer={selectedOffer} status={workerOfferStatuses[selectedOffer.id]} onBack={() => setDestination('opportunities')} onDecision={(decision, scenario) => handleOfferDecision(selectedOffer.id, decision, scenario)} onAccepted={() => setDestination('jobs')} />
         ) : !isEmployerScreen && destination === 'jobs' ? (
-          <WorkerJobs jobs={workerJobs} getContactLink={getWorkerContactLink} onOpenChat={(link) => openWorkerJobContact(link, 'communicationChat')} onOpenCall={(link) => openWorkerJobContact(link, 'communicationCall')} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} />
+          <WorkerJobs jobs={workerJobs} getContactLink={getWorkerContactLink} getContactAuthorization={getWorkerContactAuthorization} onOpenChat={(link) => openWorkerJobContact(link, 'communicationChat')} onOpenCall={(link) => openWorkerJobContact(link, 'communicationCall')} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('jobs'); setDestination('shiftDetail') }} />
         ) : !isEmployerScreen && destination === 'schedule' ? (
           <WorkerSchedule shifts={workerShifts} onOpenShift={(id) => { setSelectedShiftId(id); setShiftReturnDestination('schedule'); setDestination('shiftDetail') }} />
         ) : !isEmployerScreen && destination === 'shiftDetail' && selectedShift ? (
-          <WorkerShiftDetail shift={selectedShift} contactLink={getWorkerContactLink(selectedShift.id)} onOpenChat={(link) => openConversation(link, 'communicationChat')} onOpenCall={(link) => openConversation(link, 'communicationCall')} onBack={() => setDestination(shiftReturnDestination)} onTransition={changeShiftStatus} />
+          <WorkerShiftDetail shift={selectedShift} contactLink={getWorkerContactLink(selectedShift.id)} getContactAuthorization={getWorkerContactAuthorization} onOpenChat={(link) => { if (getWorkerContactAuthorization(link, 'chat').allowed) openConversation(link, 'communicationChat') }} onOpenCall={(link) => { const access = getWorkerContactAuthorization(link, 'call'); if (access.allowed && access.currentAssignmentStatus === 'active') openConversation(link, 'communicationCall') }} onBack={() => setDestination(shiftReturnDestination)} onTransition={changeShiftStatus} />
         ) : !isEmployerScreen && destination === 'wallet' ? (
           <WorkerWallet transactions={workerTransactions} onOpenTransaction={(id) => { setSelectedTransactionId(id); setDestination('transactionDetail') }} />
         ) : !isEmployerScreen && destination === 'transactionDetail' && selectedTransaction ? (
