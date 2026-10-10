@@ -24,25 +24,13 @@ export function EmployerServiceCatalog({ onChoose }: { onChoose: (serviceId: str
   )
 }
 
-export function EmployerProfile({ onNavigate }: { onNavigate: (destination: Destination) => void }) {
+export function EmployerProfile({ onNavigate, profile }: { onNavigate: (destination: Destination) => void; profile?: import('../../types/employerAccount').EmployerDemoProfile }) {
   return (
     <main className="employer-page-content">
       <PageHeading eyebrow="TÀI KHOẢN DEMO" title="Tài khoản" detail="Thông tin giả lập, không liên kết danh tính thật." />
-      <section className="employer-profile-card">
-        <span className="employer-profile-avatar" aria-hidden="true">MA</span>
-        <div><strong>Minh Anh</strong><small>Người thuê · Hồ sơ demo</small></div>
-        <span className="demo-profile-tag">DEMO</span>
-      </section>
-      <h2 className="employer-subheading">Quản lý tài khoản</h2>
-      <div className="profile-menu-list">{employerProfileItems.map((item) => item.id === 'requests' ? (
-        <button type="button" className="profile-menu-item" key={item.id} onClick={() => onNavigate('history')}>
-          <span><strong>{item.label}</strong><small>{item.description}</small></span><b aria-hidden="true">›</b>
-        </button>
-      ) : (
-        <button type="button" className="profile-menu-item is-disabled" key={item.id} disabled aria-label={`${item.label}, chưa hỗ trợ trong demo`}>
-          <span><strong>{item.label}</strong><small>{item.description}</small></span><b aria-hidden="true">›</b>
-        </button>
-      ))}</div>
+      <section className="employer-profile-card"><span className="employer-profile-avatar" aria-hidden="true">{profile?.displayName.split(/\s+/).slice(-2).map((s) => s[0]).join('').toUpperCase() ?? 'MA'}</span><div><strong>{profile?.displayName ?? 'Minh Anh'}</strong><small>Người thuê · Hồ sơ demo</small></div><span className="demo-profile-tag">DEMO</span></section>
+      <h2 className="employer-subheading">Tài khoản và tiện ích</h2>
+      <div className="profile-menu-list">{employerProfileItems.map((item) => <button type="button" className="profile-menu-item" key={item.id} onClick={() => onNavigate(item.id === 'requests' ? 'history' : item.id === 'addresses' ? 'employerAddresses' : item.id === 'payments' ? 'employerPaymentsInfo' : 'employerSupport')}><span><strong>{item.label}</strong><small>{item.description}</small></span><b aria-hidden="true">›</b></button>)}</div>
       <button className="primary-button profile-create-button" type="button" onClick={() => onNavigate('requestDraft')}>Tạo yêu cầu công việc <span aria-hidden="true">→</span></button>
     </main>
   )

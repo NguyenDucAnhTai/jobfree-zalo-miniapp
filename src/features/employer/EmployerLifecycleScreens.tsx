@@ -71,9 +71,11 @@ export function EmployerRequestSummary({
 export function EmployerRequestHistory({
   requests,
   onOpen,
+  onRebook,
 }: {
   requests: EmployerWorkRequest[]
   onOpen: (id: string) => void
+  onRebook?: (request: EmployerWorkRequest) => void
 }) {
   const [filter, setFilter] = useState<WorkRequestStatus | 'all'>('all')
   const [listState, setListState] = useState<AsyncState>('success')
@@ -94,12 +96,12 @@ export function EmployerRequestHistory({
       </div>
       {result.state === 'loading' ? <div className="lifecycle-state-card" role="status"><span className="loading-mark" aria-hidden="true" />Đang tải danh sách demo…</div>
         : result.state === 'error' || result.state === 'offline' ? <div className="lifecycle-state-card is-error" role="status"><strong>{result.state === 'offline' ? 'Đang ngoại tuyến' : 'Chưa thể tải danh sách'}</strong><p>{result.message} Dữ liệu không được gửi tới server.</p></div>
-          : visibleRequests.length ? <div className="request-history-list">{visibleRequests.map((request) => <button type="button" className="request-history-card" key={request.id} onClick={() => onOpen(request.id)}>
+          : visibleRequests.length ? <div className="request-history-list">{visibleRequests.map((request) => <div className="request-history-entry" key={request.id}><button type="button" className="request-history-card" onClick={() => onOpen(request.id)}>
             <span className="history-card-top"><span className="history-service-icon" aria-hidden="true">▤</span><span className={`request-status status-${request.status}`}>{statusLabel[request.status]}</span></span>
             <strong className="history-card-title">{request.serviceLabel} · {request.details}</strong>
             <span className="history-card-meta">{request.id} · {request.createdAt}</span>
             <span className="history-card-bottom"><span>{request.location}</span><b>{formatMoney(request.referenceBudget)} <span aria-hidden="true">›</span></b></span>
-          </button>)}</div>
+          </button>{onRebook && ['completed', 'cancelled'].includes(request.status) && <button className="request-rebook-link" type="button" onClick={() => onRebook(request)}>Đặt lại dịch vụ</button>}</div>)}</div>
             : <div className="lifecycle-state-card is-empty" role="status"><span aria-hidden="true">⌕</span><strong>{result.state === 'empty' ? 'Chưa có yêu cầu demo' : 'Không có yêu cầu theo bộ lọc'}</strong><p>Thử chọn trạng thái khác hoặc quay lại tạo bản nháp demo.</p></div>}
       <p className="lifecycle-disclaimer">Danh sách và trạng thái đều là fixture cố định; không phản ánh công việc thật.</p>
     </main>
@@ -118,6 +120,7 @@ export function EmployerRequestDetail({
   onOpenReview,
   onOpenIncident,
   onOpenDispute,
+  onRebook,
 }: {
   request: EmployerWorkRequest
   onBack: () => void
@@ -130,6 +133,7 @@ export function EmployerRequestDetail({
   onOpenReview?: () => void
   onOpenIncident?: () => void
   onOpenDispute?: () => void
+  onRebook?: (request: EmployerWorkRequest) => void
 }) {
   const [matchingScenario, setMatchingScenario] = useState<'progress' | 'awaiting' | 'empty' | 'unavailable'>('progress')
   const [openExtensionScope, setOpenExtensionScope] = useState<string | null>(null)
@@ -236,6 +240,7 @@ export function EmployerRequestDetail({
         <div className="request-summary-line"><span>Ngân sách tham khảo</span><strong>{formatMoney(request.referenceBudget)}</strong></div>
         <p className="quote-disclaimer">DEMO · NON-PRODUCTION. Không có funding hoặc thanh toán thật.</p>
       </section>
+      {onRebook && ['completed', 'cancelled'].includes(request.status) && <button className="secondary-action" type="button" onClick={() => onRebook(request)}>Đặt lại dịch vụ từ yêu cầu này</button>}
       <section className="assignment-preview" aria-labelledby="assignment-heading">
         <span className="section-kicker">KẾT QUẢ GHÉP MÔ PHỎNG</span><h2 id="assignment-heading">{request.status === 'matching' ? 'Tiến trình tìm người' : 'Người làm'}</h2>
         {request.status === 'matching' ? <div className={`matching-state-card matching-${matchingScenario}`} role="status">
