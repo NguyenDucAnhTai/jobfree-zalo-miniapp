@@ -4,7 +4,7 @@ import type { Destination } from '../../types/domain'
 
 type JobFilter = 'Gần tôi' | 'Nhận ngay' | 'Lương cao' | 'Bắt đầu sớm'
 
-export function WorkerHome({ onNavigate, jobs = workerHomeJobs, ready = true }: { onNavigate: (destination: Destination) => void; jobs?: typeof workerHomeJobs; ready?: boolean }) {
+export function WorkerHome({ onNavigate, onSelectOpportunity, jobs = workerHomeJobs, ready = true }: { onNavigate: (destination: Destination) => void; onSelectOpportunity: (id: string) => void; jobs?: typeof workerHomeJobs; ready?: boolean }) {
   const [filter, setFilter] = useState<JobFilter>('Gần tôi')
   const visibleJobs = useMemo(() => {
     if (filter === 'Nhận ngay') return jobs.filter((job) => job.tag === 'NHẬN NGAY')
@@ -18,7 +18,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs, ready = true }: 
       <section className="worker-hero-card">
         <div className="worker-hero-copy">
           <h1 aria-label="Sẵn sàng nhận việc hôm nay">Sẵn sàng nhận việc<br aria-hidden="true" />hôm nay?</h1>
-          <p>Có 8 job phù hợp gần bạn</p>
+          <p>{jobs.length ? `Có ${jobs.length} job phù hợp gần bạn` : 'Chưa có job phù hợp gần bạn'}</p>
           <button className="worker-hero-button" type="button" onClick={() => onNavigate('opportunities')}>
             Xem job gần tôi <span aria-hidden="true">→</span>
           </button>
@@ -55,7 +55,7 @@ export function WorkerHome({ onNavigate, jobs = workerHomeJobs, ready = true }: 
               </div>
               <div className="worker-job-meta"><span aria-hidden="true">◷</span>{job.schedule}</div>
               <div className="worker-job-meta"><span aria-hidden="true">⌖</span>{job.location}</div>
-              <button className="worker-detail-button" type="button" onClick={() => onNavigate('jobs')}>Xem chi tiết</button>
+              <button className="worker-detail-button" type="button" onClick={() => { onSelectOpportunity(job.id); onNavigate('opportunityDetail') }}>Xem chi tiết</button>
             </article>
           )) : (
             <div className="worker-empty-state" role="status">

@@ -58,4 +58,22 @@ describe('AppShell role context', () => {
     fireEvent.click(screen.getByRole('button', { name: /quay lại/i }))
     expect(screen.getByRole('heading', { name: 'Chọn dịch vụ' })).toBeInTheDocument()
   })
+
+  it('opens the selected Worker Home opportunity detail, returns to opportunities, and keeps Employer isolated', () => {
+    render(<AppShell />)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người làm' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Xem chi tiết' })[1])
+
+    expect(screen.getByRole('heading', { name: 'Chi tiết việc' })).toBeInTheDocument()
+    expect(screen.getByText(/demo-worker-home-job-02/)).toBeInTheDocument()
+    expect(screen.getByText(/chưa có chức năng nhận việc/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Quay lại việc mới' }))
+    expect(screen.getByRole('heading', { name: 'Việc mới' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Người thuê' })[0])
+    expect(screen.getByRole('heading', { name: /dịch vụ phổ biến/i })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Chi tiết việc' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Công việc' })[0])
+    expect(screen.getByRole('heading', { name: 'Lịch sử yêu cầu' })).toBeInTheDocument()
+  })
 })

@@ -73,7 +73,7 @@ export function AppShell() {
       <div className="app-scroll-area">
         <SharedHeader context={context} />
         <RoleSwitcher key={context} context={context} onChange={changeContext} />
-        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} ready={workerReady} />) : isEmployerScreen && destination === 'services' ? (
+        {isHome ? (isEmployerScreen ? <EmployerHome onNavigate={navigate} onSelectService={chooseService} /> : <WorkerHome onNavigate={navigate} onSelectOpportunity={setSelectedOpportunityId} ready={workerReady} />) : isEmployerScreen && destination === 'services' ? (
           <EmployerServiceCatalog onChoose={chooseService} />
         ) : isEmployerScreen && destination === 'history' ? (
           <EmployerRequestHistory requests={employerRequests} onOpen={openRequest} />
