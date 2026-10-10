@@ -4,7 +4,7 @@
 
 - Branch: `feat/zmp-r5-worker-ui-refinement`.
 - Base: approved R5 HEAD `366f8a658c5324d8747d1a79570138299211fc6f`; verified as an ancestor before branching.
-- Implementation source commit: to be recorded in the delivery summary.
+- Implementation source commit: `be0d8d65f163201d825acd103149a315a4e8ccfb`.
 - The Product Owner's newly supplied redesign screenshot was not present as an accessible image attachment or workspace file during implementation. The repository contains earlier static Worker PNG exports, including `doc/design-reference/worker-employer-wireframes/wireframes-complete-v4/Trang chủ JobFree.png`; this is not the new dashboard redesign and was inspected only as legacy context.
 - Implementation follows the written refinement specification. Do not claim visual fidelity to the unavailable new screenshot or pixel-perfect Figma matching until that reference is supplied and compared.
 
